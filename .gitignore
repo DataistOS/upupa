@@ -1,0 +1,77 @@
+# =================================================================
+# Custom .gitignore for UPUPA Project (Go + Flutter)
+# =================================================================
+
+# --- OS & IDEs ---
+*.log
+*.swp
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+.DS_Store
+.history
+.tmp
+
+# --- Backend (upupa_backend) ---
+# Ignore the local SQLite database
+upupa_backend/upupa_backend.db
+
+# Ignore binaries and test outputs
+upupa_backend/cmd/*.exe
+upupa_backend/cmd/*.test
+upupa_backend/storage/
+*.out
+*.coverprofile
+
+# Go workspace files
+go.work
+go.work.sum
+
+# --- Frontend (upupa_frontend) ---
+# Dart/Flutter specific
+upupa_frontend/.dart_tool/
+upupa_frontend/.flutter-plugins
+upupa_frontend/.flutter-plugins-dependencies
+upupa_frontend/.pub-cache/
+upupa_frontend/.pub/
+upupa_frontend/.packages
+upupa_frontend/build/
+
+# Ephemeral folders for different platforms
+upupa_frontend/linux/flutter/ephemeral/
+upupa_frontend/windows/flutter/ephemeral/
+upupa_frontend/macos/Flutter/ephemeral/
+upupa_frontend/ios/Flutter/ephemeral/
+
+# Android specific sensitive files
+upupa_frontend/android/local.properties
+upupa_frontend/android/key.properties
+*.jks
+*.keystore
+# Android Gradle build cache
+upupa_frontend/android/.gradle/
+upupa_frontend/android/app/build/
+
+# iOS dependency manager & cache
+upupa_frontend/ios/Pods/
+upupa_frontend/ios/.symlinks/
+upupa_frontend/ios/Runner/Generated/
+
+# Environment variables
+.env
+.env.*
+
+# Generated files that should not be in version control
+**/GeneratedPluginRegistrant.java
+**/GeneratedPluginRegistrant.h
+**/GeneratedPluginRegistrant.m
+**/generated_plugin_registrant.*
+
+# --- Databases ---
+*.db
+*.sqlite
+
+# --- Exceptions ---
+!**/ios/**/default.mode1v3
