@@ -1,14 +1,18 @@
 // upupa_frontend/lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'features/auth/pages/login_screen.dart';
+import 'features/auth/pages/register_screen.dart';
 import 'features/auth/services/auth_service.dart';
 import 'features/collections/pages/collection_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await AuthService().init();
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => AuthService(),
@@ -25,6 +29,7 @@ class UpupaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Upupa',
       theme: ThemeData(primarySwatch: Colors.blue),
+
       home: Consumer<AuthService>(
         builder: (context, authService, _) {
           if (authService.isAuthenticated) {
@@ -34,6 +39,12 @@ class UpupaApp extends StatelessWidget {
           }
         },
       ),
+
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/collections': (context) => const CollectionListScreen(),
+      },
     );
   }
 }
