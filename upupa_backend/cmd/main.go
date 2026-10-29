@@ -58,15 +58,15 @@ func main() {
        r.Get("/collections", apiService.ListCollectionsHandler)
 
        r.Route("/collections/{name}", func(r chi.Router) {
-          r.Get("/", apiService.GetCollectionHandler) // تصحیح شده
-          r.Patch("/", apiService.UpdateCollectionHandler) // تصحیح شده
+          r.Get("/", apiService.GetCollectionHandler)
+          r.Patch("/", apiService.UpdateCollectionHandler)
           r.Delete("/", apiService.DeleteCollectionHandler)
 
           r.Post("/records", apiService.CreateRecordHandler)
           r.Get("/records", apiService.ListRecordsHandler)
 
           r.Route("/records/{id}", func(r chi.Router) {
-             r.Get("/", apiService.GetRecordHandler) // تصحیح شده
+             r.Get("/", apiService.GetRecordHandler)
              r.Put("/", apiService.UpdateRecordHandler)
              r.Delete("/", apiService.DeleteRecordHandler)
           })

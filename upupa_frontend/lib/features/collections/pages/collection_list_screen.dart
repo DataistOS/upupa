@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../auth/services/auth_service.dart';
 import '../models/collection.dart';
 import '../services/collection_service.dart';
-import '../widgets/collection_list_item.dart';
 import '../widgets/create_collection_dialog.dart';
 import 'collection_schema_screen.dart';
 import 'collection_rules_screen.dart';
@@ -20,6 +19,7 @@ class CollectionListScreen extends StatefulWidget {
 
 class _CollectionListScreenState extends State<CollectionListScreen> {
   late Future<List<Collection>> _collectionsFuture;
+  Collection? _selectedCollection;
 
   @override
   void initState() {
@@ -29,24 +29,29 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
 
   void _fetchCollections() {
     setState(() {
-      _collectionsFuture = CollectionService.getCollections();
+      _collectionsFuture = CollectionService.getCollections().then((
+        collections,
+      ) {
+        if (_selectedCollection == null && collections.isNotEmpty) {
+          _selectedCollection = collections.first;
+        } else if (_selectedCollection != null) {
+          try {
+            _selectedCollection = collections.firstWhere(
+              (c) => c.id == _selectedCollection!.id,
+            );
+          } catch (_) {
+            _selectedCollection = collections.isNotEmpty
+                ? collections.first
+                : null;
+          }
+        }
+        return collections;
+      });
     });
   }
 
   void _refreshCollections() {
     _fetchCollections();
-  }
-
-  void _navigateToRecords(Collection collection) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RecordListScreen(collection: collection),
-      ),
-    );
-    if (result == true) {
-      _refreshCollections();
-    }
   }
 
   void _navigateToSchema(Collection collection) async {
@@ -87,7 +92,9 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Collection "$collectionName" created successfully!'),
+              content: Text(
+                'Collection "$collectionName" created successfully!',
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -95,67 +102,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
           log('Collection creation error: $e');
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    });
-  }
-
-  void _deleteCollection(Collection collection) {
-    if (collection.system) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot delete system collections.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Deletion'),
-        content: Text(
-            'Are you sure you want to delete the collection "${collection.name}" and all its records?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    ).then((confirmed) async {
-      if (confirmed == true) {
-        try {
-          final service = CollectionService(collection.name);
-          await service.deleteCollection();
-
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-              Text('Collection "${collection.name}" deleted successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          _refreshCollections();
-        } catch (e) {
-          log('Collection deletion error: $e');
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
           );
         }
       }
@@ -165,76 +112,204 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Collections'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshCollections,
+      body: Row(
+        children: [
+          Container(
+            width: 260,
+            color: const Color(0xFF1F2937),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Upupa',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.logout,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          AuthService().logout();
+                          Navigator.of(context).pushReplacementNamed('/login');
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(color: Colors.white24, height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Collections',
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.refresh,
+                          color: Colors.white54,
+                          size: 16,
+                        ),
+                        onPressed: _refreshCollections,
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: FutureBuilder<List<Collection>>(
+                    future: _collectionsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white54,
+                          ),
+                        );
+                      } else if (snapshot.hasError ||
+                          !snapshot.hasData ||
+                          snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No collections',
+                            style: TextStyle(color: Colors.white54),
+                          ),
+                        );
+                      }
+
+                      final collections = snapshot.data!;
+                      return ListView.builder(
+                        itemCount: collections.length,
+                        itemBuilder: (context, index) {
+                          final collection = collections[index];
+                          final isSelected =
+                              _selectedCollection?.id == collection.id;
+
+                          return ListTile(
+                            selected: isSelected,
+                            selectedTileColor: Colors.blue.withValues(
+                              alpha: 0.2,
+                            ),
+                            leading: Icon(
+                              collection.system
+                                  ? Icons.lock
+                                  : Icons.folder_outlined,
+                              color: isSelected
+                                  ? Colors.blueAccent
+                                  : Colors.white70,
+                              size: 20,
+                            ),
+                            title: Text(
+                              collection.name,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.white70,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            onTap: () {
+                              setState(() {
+                                _selectedCollection = collection;
+                              });
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 44),
+                    ),
+                    onPressed: _showCreateDialog,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('New collection'),
+                  ),
+                ),
+              ],
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              AuthService().logout();
-              Navigator.of(context).pushReplacementNamed('/login');
-            },
+
+          Expanded(
+            child: _selectedCollection == null
+                ? Container(
+                    color: const Color(0xFFF3F4F6),
+                    child: const Center(
+                      child: Text(
+                        'Select a collection from the sidebar to view records.',
+                      ),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        color: Colors.white,
+                        child: Row(
+                          children: [
+                            Text(
+                              'Collections / ${_selectedCollection!.name}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF374151),
+                              ),
+                            ),
+                            const Spacer(),
+                            OutlinedButton.icon(
+                              onPressed: () =>
+                                  _navigateToSchema(_selectedCollection!),
+                              icon: const Icon(Icons.code, size: 16),
+                              label: const Text('Schema'),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: () =>
+                                  _navigateToRules(_selectedCollection!),
+                              icon: const Icon(Icons.rule, size: 16),
+                              label: const Text('API Rules'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1, thickness: 1),
+                      Expanded(
+                        child: RecordListScreen(
+                          key: ValueKey(_selectedCollection!.id),
+                          collection: _selectedCollection!,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
-      ),
-      body: FutureBuilder<List<Collection>>(
-        future: _collectionsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            log('Error loading collections: ${snapshot.error}');
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Error: ${snapshot.error.toString().split(':').last.trim()}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _refreshCollections,
-                      child: const Text('Try Again'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text('No collections found. Start by creating one!'),
-            );
-          } else {
-            final collections = snapshot.data!;
-            return ListView.builder(
-              itemCount: collections.length,
-              itemBuilder: (context, index) {
-                final collection = collections[index];
-
-                return CollectionListItem(
-                  collection: collection,
-                  onRecordsTap: () => _navigateToRecords(collection),
-                  onSchemaEdit: () => _navigateToSchema(collection),
-                  onRulesEdit: () => _navigateToRules(collection),
-                  onDelete: () => _deleteCollection(collection),
-                );
-              },
-            );
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateDialog,
-        tooltip: 'Create New Collection',
-        child: const Icon(Icons.add),
       ),
     );
   }
