@@ -54,6 +54,9 @@ func main() {
        r.Post("/register", apiService.RegisterHandler)
        r.Post("/login", apiService.LoginHandler)
 
+       r.Post("/files", apiService.UploadFileHandler)
+       r.Get("/files/{filename}", apiService.ServeFileHandler)
+
        r.Post("/collections", apiService.CreateCollectionHandler)
        r.Get("/collections", apiService.ListCollectionsHandler)
 

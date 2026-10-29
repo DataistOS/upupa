@@ -22,7 +22,7 @@ upupa_backend/upupa_backend.db
 # Ignore binaries and test outputs
 upupa_backend/cmd/*.exe
 upupa_backend/cmd/*.test
-upupa_backend/storage/
+upupa_backend/cmd/storage/
 *.out
 *.coverprofile
 

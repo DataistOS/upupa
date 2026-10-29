@@ -114,7 +114,7 @@ class CollectionService {
         throw Exception('Collection not found for schema update.');
       } else {
         throw Exception(
-          'Failed to update schema.Status: ${response.statusCode}, Body: ${response.body}',
+          'Failed to update schema. Status: ${response.statusCode}, Body: ${response.body}',
         );
       }
     } catch (e) {
@@ -143,6 +143,38 @@ class CollectionService {
       }
     } catch (e) {
       throw Exception('Failed to connect to API: $e');
+    }
+  }
+
+  // متد جدید برای آپلود فایل به سرور
+  static Future<String> uploadFile(dynamic fileBytes, String filename) async {
+    final uri = Uri.parse('$_baseUrl/files');
+
+    try {
+      var request = http.MultipartRequest('POST', uri);
+
+      final authInstance = AuthService();
+      if (authInstance.token != null) {
+        request.headers['Authorization'] = 'Bearer ${authInstance.token}';
+      }
+
+      request.files.add(
+        http.MultipartFile.fromBytes('file', fileBytes, filename: filename),
+      );
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 201) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        return responseData['filename'] ?? '';
+      } else {
+        throw Exception(
+          'Failed to upload file. Status: ${response.statusCode}, Body: ${response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to connect to API for file upload: $e');
     }
   }
 

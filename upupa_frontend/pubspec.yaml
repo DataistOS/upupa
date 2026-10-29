@@ -2,7 +2,7 @@
 name: upupa_frontend
 description: "UpUpa is the Backend-as-a-Service (BaaS) platform"
 issue_tracker: https://github.com/DataistOS/upupa/issues
-version: 0.1.5+1
+version: 0.1.6+1
 
 # Environment
 environment:
@@ -29,7 +29,7 @@ dependencies:
   shared_preferences: ^2.5.3
 
   # Hardware, Media & Files
-  file_picker: ^10.3.7
+  file_picker: ^11.0.3
   path_provider: ^2.1.5
 
   # State Management

@@ -67,7 +67,7 @@ class _AddFieldDialogState extends State<AddFieldDialog> {
             DropdownButtonFormField<String>(
               value: _type,
               decoration: const InputDecoration(labelText: 'Field Type'),
-              items: <String>['string', 'number', 'boolean']
+              items: <String>['string', 'number', 'boolean', 'file']
                   .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
