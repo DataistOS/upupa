@@ -146,8 +146,28 @@ class CollectionService {
     }
   }
 
-  Future<List<Record>> getRecords() async {
-    final uri = Uri.parse(_collectionUrl);
+  Future<List<Record>> getRecords({
+    int page = 1,
+    int perPage = 30,
+    String? sort,
+    String? filter,
+  }) async {
+    final Uri baseUri = Uri.parse(_collectionUrl);
+
+    final Map<String, String> queryParams = {
+      'page': page.toString(),
+      'perPage': perPage.toString(),
+    };
+
+    if (sort != null && sort.isNotEmpty) {
+      queryParams['sort'] = sort;
+    }
+
+    if (filter != null && filter.isNotEmpty) {
+      queryParams['filter'] = filter;
+    }
+
+    final uri = baseUri.replace(queryParameters: queryParams);
 
     try {
       final response = await http.get(

@@ -25,7 +25,7 @@ type RecordRepository interface {
 	GetByID(collectionID, recordID string) (*models.Record, error)
 	Update(models.Record) error
 	DeleteRecord(collectionID, recordID string) error
-	ListRecords(collectionID string, limit, offset int) ([]models.Record, error)
+	ListRecords(collectionID string, opts ListOptions) ([]models.Record, error)
 }
 
 type UserRepository interface {

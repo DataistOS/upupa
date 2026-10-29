@@ -139,7 +139,6 @@ func (a *API) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Only allowed to update Schema and Rules
 	if req.Schema != nil {
 		col.Schema = req.Schema
 	}
@@ -147,7 +146,6 @@ func (a *API) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		col.Rules = req.Rules
 	}
 
-	// FIX: Must capture both return values: the updated collection and the error
 	if _, err := a.Collections.UpdateCollection(*col); err != nil {
 		if err == sql.ErrNoRows {
 			a.respondWithError(w, http.StatusNotFound, "Collection not found during update")
@@ -244,21 +242,39 @@ func (a *API) ListRecordsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-	if err != nil {
-		limit = 100 // Default limit
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		page = 1
 	}
 
-	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-	if err != nil {
-		offset = 0 // Default offset
+	perPage, err := strconv.Atoi(r.URL.Query().Get("perPage"))
+	if err != nil || perPage < 1 {
+		perPage = 30
 	}
 
-	records, err := a.Records.ListRecords(col.ID, limit, offset)
+	sort := r.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "-created"
+	}
+
+	filter := r.URL.Query().Get("filter")
+
+	opts := store.ListOptions{
+		Page:    page,
+		PerPage: perPage,
+		Sort:    sort,
+		Filter:  filter,
+	}
+
+	records, err := a.Records.ListRecords(col.ID, opts)
 	if err != nil {
 		log.Printf("Error listing records: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve records")
+		a.respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to retrieve records: %v", err))
 		return
+	}
+
+	if records == nil {
+		records = []models.Record{}
 	}
 
 	a.respondWithJSON(w, http.StatusOK, records)
@@ -333,7 +349,7 @@ func (a *API) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	record.Updated = time.Now()
 
-	if err := a.Records.Update(*record); err != nil { // FIX: Dereference record
+	if err := a.Records.Update(*record); err != nil {
 		if err == sql.ErrNoRows {
 			a.respondWithError(w, http.StatusNotFound, "Record not found during update")
 			return
@@ -348,29 +364,29 @@ func (a *API) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
-	collectionName := chi.URLParam(r, "name")
-	recordID := chi.URLParam(r, "id")
+    collectionName := chi.URLParam(r, "name")
+    recordID := chi.URLParam(r, "id")
 
-	col, err := a.Collections.GetByName(collectionName)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
-			return
-		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
-		return
-	}
+    col, err := a.Collections.GetByName(collectionName)
+    if err != nil {
+       if err == sql.ErrNoRows {
+          a.respondWithError(w, http.StatusNotFound, "Collection not found")
+          return
+       }
+       a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+       return
+    }
 
-	err = a.Records.DeleteRecord(col.ID, recordID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Record not found")
-			return
-		}
-		log.Printf("Error deleting record: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to delete record")
-		return
-	}
+    err = a.Records.DeleteRecord(col.ID, recordID)
+    if err != nil {
+       if err == sql.ErrNoRows {
+          a.respondWithError(w, http.StatusNotFound, "Record not found")
+          return
+       }
+       log.Printf("Error deleting record: %v", err)
+       a.respondWithError(w, http.StatusInternalServerError, "Failed to delete record")
+       return
+    }
 
-	a.respondWithJSON(w, http.StatusNoContent, nil)
+    a.respondWithJSON(w, http.StatusNoContent, nil)
 }
