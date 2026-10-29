@@ -11,6 +11,7 @@ Field _$FieldFromJson(Map<String, dynamic> json) => Field(
   type: json['type'] as String,
   required: json['required'] as bool? ?? false,
   defaultValue: json['defaultValue'],
+  collectionId: json['collectionId'] as String?,
 );
 
 Map<String, dynamic> _$FieldToJson(Field instance) => <String, dynamic>{
@@ -18,4 +19,5 @@ Map<String, dynamic> _$FieldToJson(Field instance) => <String, dynamic>{
   'type': instance.type,
   'required': instance.required,
   'defaultValue': instance.defaultValue,
+  'collectionId': ?instance.collectionId,
 };

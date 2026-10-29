@@ -14,6 +14,7 @@ type Field struct {
     Type         string      `json:"type"`
     Required     bool        `json:"required"`
     DefaultValue interface{} `json:"defaultValue,omitempty"`
+    CollectionId string      `json:"collectionId,omitempty"`
 }
 
 type Rule struct {
@@ -41,6 +42,7 @@ type Record struct {
     Created      time.Time              `json:"created"`
     Updated      time.Time              `json:"updated"`
     Data         map[string]interface{} `json:"data"`
+    Expand       map[string]interface{} `json:"expand,omitempty"`
 }
 
 type User struct {

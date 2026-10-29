@@ -1,14 +1,14 @@
 // upupa_frontend/lib/features/collections/widgets/record_field_widget.dart
 import 'package:flutter/material.dart';
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 
 import '../models/field.dart';
+import '../models/record.dart';
+import '../services/collection_service.dart';
 
 typedef FieldValueChangeCallback = void Function(dynamic value);
 
-class RecordFieldWidget extends StatelessWidget {
+class RecordFieldWidget extends StatefulWidget {
   final Field field;
   final dynamic initialValue;
   final FieldValueChangeCallback onValueChanged;
@@ -20,10 +20,48 @@ class RecordFieldWidget extends StatelessWidget {
     required this.onValueChanged,
   });
 
-  String get _label => field.name[0].toUpperCase() + field.name.substring(1);
+  @override
+  State<RecordFieldWidget> createState() => _RecordFieldWidgetState();
+}
+
+class _RecordFieldWidgetState extends State<RecordFieldWidget> {
+  List<Record> _targetRecords = [];
+  bool _isLoadingRelation = false;
+
+  String get _label =>
+      widget.field.name[0].toUpperCase() + widget.field.name.substring(1);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.field.type == 'relation' && widget.field.collectionId != null) {
+      _loadTargetRecords();
+    }
+  }
+
+  Future<void> _loadTargetRecords() async {
+    setState(() {
+      _isLoadingRelation = true;
+    });
+    try {
+      final records = await CollectionService.getRecordsForCollection(
+        widget.field.collectionId!,
+      );
+      if (!mounted) return;
+      setState(() {
+        _targetRecords = records;
+        _isLoadingRelation = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingRelation = false;
+      });
+    }
+  }
 
   String? _validator(dynamic value) {
-    if (field.required &&
+    if (widget.field.required &&
         (value == null || (value is String && value.isEmpty))) {
       return '$_label is required.';
     }
@@ -31,11 +69,10 @@ class RecordFieldWidget extends StatelessWidget {
   }
 
   Widget _buildInputWidget(BuildContext context) {
-    final String hintText = field.name;
+    final String hintText = widget.field.name;
+    final String initialStringValue = widget.initialValue?.toString() ?? '';
 
-    final String initialStringValue = initialValue?.toString() ?? '';
-
-    switch (field.type) {
+    switch (widget.field.type) {
       case 'string':
         // ======================= STRING =======================
         return TextFormField(
@@ -45,7 +82,7 @@ class RecordFieldWidget extends StatelessWidget {
             border: const OutlineInputBorder(),
             hintText: hintText,
           ),
-          onChanged: onValueChanged,
+          onChanged: widget.onValueChanged,
           validator: (value) => _validator(value),
         );
 
@@ -61,7 +98,7 @@ class RecordFieldWidget extends StatelessWidget {
           keyboardType: TextInputType.number,
           onChanged: (value) {
             final numValue = num.tryParse(value);
-            onValueChanged(numValue);
+            widget.onValueChanged(numValue);
           },
           validator: (value) {
             final error = _validator(value);
@@ -78,40 +115,81 @@ class RecordFieldWidget extends StatelessWidget {
       case 'boolean':
         // ======================= BOOLEAN =======================
         bool isChecked = false;
-        if (initialValue is bool) {
-          isChecked = initialValue;
-        } else if (initialValue is String) {
+        if (widget.initialValue is bool) {
+          isChecked = widget.initialValue;
+        } else if (widget.initialValue is String) {
           isChecked =
-              initialValue.toLowerCase() == 'true' || initialValue == '1';
-        } else if (initialValue is num) {
-          isChecked = initialValue != 0;
+              widget.initialValue.toLowerCase() == 'true' ||
+              widget.initialValue == '1';
+        } else if (widget.initialValue is num) {
+          isChecked = widget.initialValue != 0;
         }
 
         return CheckboxListTile(
           title: Text(_label),
           value: isChecked,
           onChanged: (bool? newValue) {
-            onValueChanged(newValue ?? false);
+            widget.onValueChanged(newValue ?? false);
           },
           controlAffinity: ListTileControlAffinity.leading,
           contentPadding: EdgeInsets.zero,
         );
 
+      case 'relation':
+        // ======================= RELATION =======================
+        String? selectedValue;
+        if (widget.initialValue != null &&
+            widget.initialValue.toString().isNotEmpty) {
+          final stringVal = widget.initialValue.toString();
+          if (_targetRecords.any((rec) => rec.id == stringVal)) {
+            selectedValue = stringVal;
+          }
+        }
+
+        return DropdownButtonFormField<String>(
+          value: selectedValue,
+          decoration: InputDecoration(
+            labelText: _label,
+            border: const OutlineInputBorder(),
+            hintText: _isLoadingRelation
+                ? 'Loading items...'
+                : 'Select related record',
+          ),
+          items: _targetRecords.map<DropdownMenuItem<String>>((rec) {
+            String displayLabel = rec.id;
+            if (rec.data.isNotEmpty) {
+              for (var val in rec.data.values) {
+                if (val != null) {
+                  displayLabel = val.toString();
+                  break;
+                }
+              }
+            }
+            return DropdownMenuItem<String>(
+              value: rec.id,
+              child: Text(displayLabel),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            widget.onValueChanged(newValue);
+          },
+          validator: (value) => _validator(value),
+        );
+
       case 'date':
         // ======================= DATE =======================
-
-        String dateText = initialValue != null
-            ? initialValue is DateTime
-                  ? initialValue.toString().split(' ').first
-                  : initialValue.toString()
+        String dateText = widget.initialValue != null
+            ? widget.initialValue is DateTime
+                  ? widget.initialValue.toString().split(' ').first
+                  : widget.initialValue.toString()
             : 'Select Date';
 
         DateTime? initialDateTime;
-        if (initialValue is DateTime) {
-          initialDateTime = initialValue;
-        } else if (initialValue is String) {
+        if (widget.initialValue is DateTime) {
+          initialDateTime = widget.initialValue;
+        } else if (widget.initialValue is String) {
           try {
-            initialDateTime = DateTime.tryParse(initialValue);
+            initialDateTime = DateTime.tryParse(widget.initialValue);
           } catch (_) {
             initialDateTime = null;
           }
@@ -126,7 +204,7 @@ class RecordFieldWidget extends StatelessWidget {
               lastDate: DateTime(2101),
             );
             if (picked != null) {
-              onValueChanged(picked);
+              widget.onValueChanged(picked);
             }
           },
           child: InputDecorator(
@@ -148,13 +226,13 @@ class RecordFieldWidget extends StatelessWidget {
         return _FilePickerInput(
           label: _label,
           initialValue: initialStringValue,
-          onValueChanged: onValueChanged,
+          onValueChanged: widget.onValueChanged,
           validator: _validator,
         );
 
       default:
         return Text(
-          'Unsupported field type: ${field.type}',
+          'Unsupported field type: ${widget.field.type}',
           style: const TextStyle(color: Colors.red),
         );
     }
@@ -162,7 +240,7 @@ class RecordFieldWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isBoolean = field.type == 'boolean';
+    final isBoolean = widget.field.type == 'boolean';
 
     return Padding(
       padding: EdgeInsets.only(bottom: isBoolean ? 8.0 : 16.0),
@@ -211,16 +289,16 @@ class __FilePickerInputState extends State<_FilePickerInput> {
   }
 
   Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    FilePickerResult? result = await FilePicker.pickFiles(withData: true);
 
-    if (result != null && result.files.single.path != null) {
-      final String filePath = result.files.single.path!;
+    if (result != null && result.files.single.bytes != null) {
+      final fileName = result.files.single.name;
 
       setState(() {
-        _selectedFilePath = filePath;
+        _selectedFilePath = fileName;
       });
 
-      widget.onValueChanged(filePath);
+      widget.onValueChanged(fileName);
     }
   }
 
@@ -239,10 +317,6 @@ class __FilePickerInputState extends State<_FilePickerInput> {
           initialValue: _selectedFilePath ?? _displayValue,
           validator: (value) => widget.validator(value),
           builder: (FormFieldState<String> state) {
-            if (state.value != null && state.value!.isNotEmpty) {
-              state.didChange(state.value);
-            }
-
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -21,6 +21,10 @@ class RecordFormState extends State<RecordForm> {
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, bool> _checkboxValues = {};
   final Map<String, String> _fileValues = {};
+  final Map<String, String?> _relationValues = {};
+  final Map<String, List<Record>> _targetRecordsCache = {};
+  final Map<String, bool> _loadingRelations = {};
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isUploading = false;
 
@@ -28,6 +32,7 @@ class RecordFormState extends State<RecordForm> {
   void initState() {
     super.initState();
     _initializeControllers();
+    _loadRelationTargetRecords();
   }
 
   void _initializeControllers() {
@@ -45,10 +50,38 @@ class RecordFormState extends State<RecordForm> {
         _checkboxValues[key] = initialValue as bool? ?? false;
       } else if (field.type == 'file') {
         _fileValues[key] = initialValue?.toString() ?? '';
+      } else if (field.type == 'relation') {
+        _relationValues[key] = initialValue?.toString();
       } else {
         _controllers[key] = TextEditingController(
           text: initialValue?.toString() ?? '',
         );
+      }
+    }
+  }
+
+  Future<void> _loadRelationTargetRecords() async {
+    for (var field in widget.collection.schema) {
+      if (field.type == 'relation' && field.collectionId != null) {
+        final targetCollId = field.collectionId!;
+        setState(() {
+          _loadingRelations[field.name] = true;
+        });
+
+        try {
+          final records = await CollectionService.getRecordsForCollection(
+            targetCollId,
+          );
+          setState(() {
+            _targetRecordsCache[field.name] = records;
+            _loadingRelations[field.name] = false;
+          });
+        } catch (e) {
+          log('Error loading target records for relation ${field.name}: $e');
+          setState(() {
+            _loadingRelations[field.name] = false;
+          });
+        }
       }
     }
   }
@@ -68,6 +101,8 @@ class RecordFormState extends State<RecordForm> {
         data[fieldName] = _checkboxValues[fieldName] ?? false;
       } else if (field.type == 'file') {
         data[fieldName] = _fileValues[fieldName] ?? '';
+      } else if (field.type == 'relation') {
+        data[fieldName] = _relationValues[fieldName];
       } else {
         final controller = _controllers[fieldName]!;
         if (field.type == 'number') {
@@ -200,6 +235,49 @@ class RecordFormState extends State<RecordForm> {
             ],
           ),
         );
+      case 'relation':
+        final isLoading = _loadingRelations[fieldName] ?? false;
+        final targetRecords = _targetRecordsCache[fieldName] ?? [];
+
+        return DropdownButtonFormField<String>(
+          value: _relationValues[fieldName],
+          decoration: InputDecoration(
+            labelText: '$fieldName (Relation)',
+            suffixText: required ? '*' : '',
+            border: const OutlineInputBorder(),
+          ),
+          items: targetRecords.map<DropdownMenuItem<String>>((rec) {
+            String label = rec.id;
+            if (rec.data.isNotEmpty) {
+              for (var val in rec.data.values) {
+                if (val != null) {
+                  label = val.toString();
+                  break;
+                }
+              }
+            }
+            return DropdownMenuItem<String>(
+              value: rec.id,
+              child: Text(
+                '$label (${rec.id.substring(0, min(6, rec.id.length))})',
+              ),
+            );
+          }).toList(),
+          hint: isLoading
+              ? const Text('Loading items...')
+              : const Text('Select related record'),
+          onChanged: (String? newValue) {
+            setState(() {
+              _relationValues[fieldName] = newValue;
+            });
+          },
+          validator: (value) {
+            if (required && (value == null || value.isEmpty)) {
+              return 'This relation field is required.';
+            }
+            return null;
+          },
+        );
       case 'number':
         return TextFormField(
           controller: _controllers[fieldName],
@@ -245,4 +323,6 @@ class RecordFormState extends State<RecordForm> {
       ),
     );
   }
+
+  int min(int a, int b) => a < b ? a : b;
 }

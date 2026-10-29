@@ -14,11 +14,15 @@ class Field {
 
   final dynamic defaultValue;
 
+  @JsonKey(name: 'collectionId', includeIfNull: false)
+  final String? collectionId;
+
   Field({
     required this.name,
     required this.type,
     this.required = false,
     this.defaultValue,
+    this.collectionId,
   });
 
   factory Field.fromJson(Map<String, dynamic> json) => _$FieldFromJson(json);

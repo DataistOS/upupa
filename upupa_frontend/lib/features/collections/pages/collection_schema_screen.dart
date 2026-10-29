@@ -26,12 +26,26 @@ class _CollectionSchemaScreenState extends State<CollectionSchemaScreen> {
   late List<Field> _fields;
   late CollectionService _service;
   bool _isSaving = false;
+  List<Collection> _allCollections = [];
 
   @override
   void initState() {
     super.initState();
     _fields = List.from(widget.collection.schema);
     _service = CollectionService(widget.collection.name);
+    _loadCollections();
+  }
+
+  Future<void> _loadCollections() async {
+    try {
+      final collections = await CollectionService.getCollections();
+      if (!mounted) return;
+      setState(() {
+        _allCollections = collections;
+      });
+    } catch (e) {
+      log('Error loading collections for schema: $e');
+    }
   }
 
   void _onFieldAdded(Field newField) {
@@ -73,7 +87,10 @@ class _CollectionSchemaScreenState extends State<CollectionSchemaScreen> {
   void _showAddFieldDialog() {
     showDialog<Field>(
       context: context,
-      builder: (context) => AddFieldDialog(existingFields: _fields),
+      builder: (context) => AddFieldDialog(
+        existingFields: _fields,
+        availableCollections: _allCollections,
+      ),
     ).then((newField) {
       if (newField != null) {
         _onFieldAdded(newField);
@@ -107,10 +124,11 @@ class _CollectionSchemaScreenState extends State<CollectionSchemaScreen> {
         SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
       );
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _isSaving = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
   }
 

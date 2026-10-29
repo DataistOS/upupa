@@ -75,6 +75,30 @@ class CollectionService {
     }
   }
 
+  static Future<List<Record>> getRecordsForCollection(
+    String collectionName,
+  ) async {
+    final uri = Uri.parse('$_baseUrl/collections/$collectionName/records');
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: _getHeaders(includeContentType: false),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> items = json.decode(response.body);
+        return items.map((jsonItem) => Record.fromJson(jsonItem)).toList();
+      } else {
+        throw Exception(
+          'Failed to load records for collection $collectionName. Status: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to connect to API: $e');
+    }
+  }
+
   Future<void> deleteCollection() async {
     final uri = Uri.parse('$_baseUrl/collections/$collectionName');
 
