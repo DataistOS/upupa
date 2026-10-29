@@ -14,7 +14,7 @@ class CollectionService {
   final String _collectionUrl;
 
   CollectionService(this.collectionName)
-      : _collectionUrl = '$_baseUrl/collections/$collectionName/records';
+    : _collectionUrl = '$_baseUrl/collections/$collectionName/records';
 
   static Map<String, String> _getHeaders({bool includeContentType = true}) {
     final authInstance = AuthService();
@@ -99,7 +99,7 @@ class CollectionService {
   }
 
   Future<Collection> updateCollectionSchema(List<Field> schema) async {
-    final uri = Uri.parse('$_baseUrl/collections/$collectionName/schema');
+    final uri = Uri.parse('$_baseUrl/collections/$collectionName');
 
     try {
       final response = await http.patch(
@@ -114,7 +114,7 @@ class CollectionService {
         throw Exception('Collection not found for schema update.');
       } else {
         throw Exception(
-          'Failed to update schema. Status: ${response.statusCode}, Body: ${response.body}',
+          'Failed to update schema.Status: ${response.statusCode}, Body: ${response.body}',
         );
       }
     } catch (e) {

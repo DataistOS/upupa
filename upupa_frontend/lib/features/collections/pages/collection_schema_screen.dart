@@ -73,9 +73,7 @@ class _CollectionSchemaScreenState extends State<CollectionSchemaScreen> {
   void _showAddFieldDialog() {
     showDialog<Field>(
       context: context,
-      builder: (context) => AddFieldDialog(
-        existingFields: _fields,
-      ),
+      builder: (context) => AddFieldDialog(existingFields: _fields),
     ).then((newField) {
       if (newField != null) {
         _onFieldAdded(newField);
@@ -106,10 +104,7 @@ class _CollectionSchemaScreenState extends State<CollectionSchemaScreen> {
       log('Schema update error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
       );
     } finally {
       if (!mounted) return;
@@ -119,7 +114,6 @@ class _CollectionSchemaScreenState extends State<CollectionSchemaScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,50 +122,50 @@ class _CollectionSchemaScreenState extends State<CollectionSchemaScreen> {
         actions: [
           _isSaving
               ? const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              ),
-            ),
-          )
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ),
+                )
               : IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: widget.collection.system || _isSaving
-                ? null
-                : _saveSchema,
-          ),
+                  icon: const Icon(Icons.save),
+                  onPressed: widget.collection.system || _isSaving
+                      ? null
+                      : _saveSchema,
+                ),
         ],
       ),
       body: widget.collection.system
           ? const Center(
-        child: Text(
-          'Cannot modify the schema of system collections.',
-          style: TextStyle(fontStyle: FontStyle.italic),
-        ),
-      )
+              child: Text(
+                'Cannot modify the schema of system collections.',
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
+            )
           : ListView.builder(
-        itemCount: _fields.length,
-        itemBuilder: (context, index) {
-          final field = _fields[index];
-          return SchemaFieldTile(
-            field: field,
-            onDelete: () => _deleteField(index),
-          );
-        },
-      ),
+              itemCount: _fields.length,
+              itemBuilder: (context, index) {
+                final field = _fields[index];
+                return SchemaFieldTile(
+                  field: field,
+                  onDelete: () => _deleteField(index),
+                );
+              },
+            ),
       floatingActionButton: widget.collection.system
           ? null
           : FloatingActionButton(
-        onPressed: _showAddFieldDialog,
-        tooltip: 'Add Field',
-        child: const Icon(Icons.add),
-      ),
+              onPressed: _showAddFieldDialog,
+              tooltip: 'Add Field',
+              child: const Icon(Icons.add),
+            ),
     );
   }
 }
