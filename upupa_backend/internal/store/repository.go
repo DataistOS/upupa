@@ -1,6 +1,4 @@
 // upupa_backend/internal/store/repository.go
-// upupa_backend/internal/store/repository.go
-
 package store
 
 import (

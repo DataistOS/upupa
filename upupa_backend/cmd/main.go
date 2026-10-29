@@ -67,6 +67,7 @@ func main() {
 
           r.Route("/records/{id}", func(r chi.Router) {
              r.Get("/", apiService.GetRecordHandler)
+             r.Patch("/", apiService.UpdateRecordHandler)
              r.Put("/", apiService.UpdateRecordHandler)
              r.Delete("/", apiService.DeleteRecordHandler)
           })
