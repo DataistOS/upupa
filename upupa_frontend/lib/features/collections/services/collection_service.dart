@@ -123,7 +123,7 @@ class CollectionService {
   }
 
   Future<Collection> updateCollectionRules(List<Rule> rules) async {
-    final uri = Uri.parse('$_baseUrl/collections/$collectionName/rules');
+    final uri = Uri.parse('$_baseUrl/collections/$collectionName');
 
     try {
       final response = await http.patch(
