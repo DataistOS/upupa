@@ -54,6 +54,10 @@ func main() {
 		r.Post("/register", apiService.RegisterHandler)
 		r.Post("/login", apiService.LoginHandler)
 
+		// افزودن مسیرهای پروفایل کاربر
+		r.Get("/profile", apiService.GetProfileHandler)
+		r.Put("/profile", apiService.UpdateProfileHandler)
+
 		r.Post("/files", apiService.UploadFileHandler)
 		r.Get("/files/{filename}", apiService.ServeFileHandler)
 

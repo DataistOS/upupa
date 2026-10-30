@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 import '../../auth/services/auth_service.dart';
+import '../../auth/pages/profile_screen.dart';
 import '../models/collection.dart';
 import '../services/collection_service.dart';
 import '../widgets/create_collection_dialog.dart';
@@ -133,16 +134,39 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.logout,
-                          color: Colors.white70,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          AuthService().logout();
-                          Navigator.of(context).pushReplacementNamed('/login');
-                        },
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.person_outline,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                            tooltip: 'Profile',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ProfileScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.logout,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                            tooltip: 'Logout',
+                            onPressed: () {
+                              AuthService().logout();
+                              Navigator.of(
+                                context,
+                              ).pushReplacementNamed('/login');
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
