@@ -1,5 +1,4 @@
 // upupa_frontend/lib/features/collections/models/collection.dart
-
 import 'field.dart';
 import 'rule.dart';
 

@@ -2,9 +2,7 @@
 import 'package:flutter/material.dart';
 
 class CreateCollectionDialog extends StatefulWidget {
-  const CreateCollectionDialog({
-    super.key,
-  });
+  const CreateCollectionDialog({super.key});
 
   @override
   State<CreateCollectionDialog> createState() => _CreateCollectionDialogState();

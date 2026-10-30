@@ -22,9 +22,11 @@ class RecordDetailScreen extends StatefulWidget {
 }
 
 class _RecordDetailScreenState extends State<RecordDetailScreen> {
-  final GlobalKey<RecordFormState> _recordFormKey = GlobalKey<RecordFormState>();
+  final GlobalKey<RecordFormState> _recordFormKey =
+      GlobalKey<RecordFormState>();
   Record? _record;
   bool _isLoading = true;
+
   bool get _isEditMode => widget.recordId != null;
   late CollectionService _service;
 
@@ -85,9 +87,11 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isEditMode
-              ? 'Record updated successfully!'
-              : 'Record created successfully!'),
+          content: Text(
+            _isEditMode
+                ? 'Record updated successfully!'
+                : 'Record created successfully!',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -115,31 +119,31 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
         actions: [
           _isLoading
               ? const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              ),
-            ),
-          )
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ),
+                )
               : IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveRecord,
-          ),
+                  icon: const Icon(Icons.save),
+                  onPressed: _saveRecord,
+                ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RecordForm(
-        key: _recordFormKey,
-        collection: widget.collection,
-        record: _record,
-      ),
+              key: _recordFormKey,
+              collection: widget.collection,
+              record: _record,
+            ),
     );
   }
 }

@@ -1,5 +1,4 @@
 // upupa_frontend/lib/features/collections/widgets/add_field_dialog.dart
-
 import 'package:flutter/material.dart';
 
 import '../models/field.dart';

@@ -83,7 +83,3 @@ class RecordListItem extends StatelessWidget {
     );
   }
 }
-
-extension on Record {
-  get updated => null;
-}

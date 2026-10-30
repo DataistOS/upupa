@@ -22,7 +22,9 @@ class AuthService extends ChangeNotifier {
   bool _isAuthenticated = false;
 
   String? get token => _token;
+
   User? get currentUser => _currentUser;
+
   bool get isAuthenticated => _isAuthenticated;
 
   Future<void> init() async {
@@ -55,10 +57,7 @@ class AuthService extends ChangeNotifier {
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': email,
-        'password': password,
-      }),
+      body: json.encode({'email': email, 'password': password}),
     );
 
     if (response.statusCode == 201) {
@@ -68,7 +67,10 @@ class AuthService extends ChangeNotifier {
       await _saveToken(token);
     } else {
       final errorBody = json.decode(response.body);
-      throw Exception(errorBody['error'] ?? 'Registration failed with status ${response.statusCode}');
+      throw Exception(
+        errorBody['error'] ??
+            'Registration failed with status ${response.statusCode}',
+      );
     }
   }
 
@@ -77,10 +79,7 @@ class AuthService extends ChangeNotifier {
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': email,
-        'password': password,
-      }),
+      body: json.encode({'email': email, 'password': password}),
     );
 
     if (response.statusCode == 200) {
@@ -90,7 +89,9 @@ class AuthService extends ChangeNotifier {
       await _saveToken(token);
     } else {
       final errorBody = json.decode(response.body);
-      throw Exception(errorBody['error'] ?? 'Login failed with status ${response.statusCode}');
+      throw Exception(
+        errorBody['error'] ?? 'Login failed with status ${response.statusCode}',
+      );
     }
   }
 

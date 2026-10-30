@@ -170,7 +170,6 @@ class CollectionService {
     }
   }
 
-  // متد جدید برای آپلود فایل به سرور
   static Future<String> uploadFile(dynamic fileBytes, String filename) async {
     final uri = Uri.parse('$_baseUrl/files');
 

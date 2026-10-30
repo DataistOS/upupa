@@ -1,5 +1,4 @@
 // upupa_frontend/lib/features/collections/models/field.dart
-
 import 'package:json_annotation/json_annotation.dart';
 
 part 'field.g.dart';
