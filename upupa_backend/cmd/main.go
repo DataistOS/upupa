@@ -32,6 +32,11 @@ func main() {
 	}
 	log.Println("Database schema initialized.")
 
+	if err := dbStore.InitLogTable(); err != nil {
+		log.Fatalf("Failed to initialize log table: %v", err)
+	}
+	log.Println("Log table initialized successfully.")
+
 	if err := createSystemCollections(dbStore); err != nil {
 		log.Fatalf("Failed to create system collections: %v", err)
 	}
@@ -48,15 +53,18 @@ func main() {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
+	router.Use(api.RequestLoggerMiddleware(dbStore))
+
 	router.Get("/health", apiService.HealthCheck)
 
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Post("/register", apiService.RegisterHandler)
 		r.Post("/login", apiService.LoginHandler)
 
-		// افزودن مسیرهای پروفایل کاربر
 		r.Get("/profile", apiService.GetProfileHandler)
 		r.Put("/profile", apiService.UpdateProfileHandler)
+
+		r.Get("/logs", api.GetLogsHandler(dbStore))
 
 		r.Post("/files", apiService.UploadFileHandler)
 		r.Get("/files/{filename}", apiService.ServeFileHandler)

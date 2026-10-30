@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/pages/profile_screen.dart';
 import '../../settings/pages/settings_screen.dart';
+import '../../logs/pages/logs_screen.dart';
 
 import '../models/collection.dart';
-
 import '../services/collection_service.dart';
 import '../widgets/create_collection_dialog.dart';
 import 'collection_schema_screen.dart';
@@ -24,6 +24,7 @@ class CollectionListScreen extends StatefulWidget {
 class _CollectionListScreenState extends State<CollectionListScreen> {
   late Future<List<Collection>> _collectionsFuture;
   Collection? _selectedCollection;
+  bool _showLogs = false;
 
   @override
   void initState() {
@@ -36,19 +37,6 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
       _collectionsFuture = CollectionService.getCollections().then((
         collections,
       ) {
-        if (_selectedCollection == null && collections.isNotEmpty) {
-          _selectedCollection = collections.first;
-        } else if (_selectedCollection != null) {
-          try {
-            _selectedCollection = collections.firstWhere(
-              (c) => c.id == _selectedCollection!.id,
-            );
-          } catch (_) {
-            _selectedCollection = collections.isNotEmpty
-                ? collections.first
-                : null;
-          }
-        }
         return collections;
       });
     });
@@ -129,12 +117,20 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Upupa',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedCollection = null;
+                            _showLogs = false;
+                          });
+                        },
+                        child: const Text(
+                          'Upupa',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       Row(
@@ -145,14 +141,26 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                               color: Colors.white70,
                               size: 20,
                             ),
-                            tooltip: 'Profile',
+                            tooltip: 'Profile & Overview',
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ProfileScreen(),
-                                ),
-                              );
+                              setState(() {
+                                _selectedCollection = null;
+                                _showLogs = false;
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.show_chart,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                            tooltip: 'Request Logs',
+                            onPressed: () {
+                              setState(() {
+                                _selectedCollection = null;
+                                _showLogs = true;
+                              });
                             },
                           ),
                           IconButton(
@@ -272,6 +280,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                             onTap: () {
                               setState(() {
                                 _selectedCollection = collection;
+                                _showLogs = false;
                               });
                             },
                           );
@@ -298,16 +307,8 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
           ),
 
           Expanded(
-            child: _selectedCollection == null
-                ? Container(
-                    color: const Color(0xFFF3F4F6),
-                    child: const Center(
-                      child: Text(
-                        'Select a collection from the sidebar to view records.',
-                      ),
-                    ),
-                  )
-                : Column(
+            child: _selectedCollection != null
+                ? Column(
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -350,7 +351,10 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                         ),
                       ),
                     ],
-                  ),
+                  )
+                : _showLogs
+                ? const LogsScreen()
+                : const ProfileScreen(),
           ),
         ],
       ),
