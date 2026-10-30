@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../../auth/services/auth_service.dart';
 import '../../auth/pages/profile_screen.dart';
+import '../../settings/pages/settings_screen.dart';
+
 import '../models/collection.dart';
+
 import '../services/collection_service.dart';
 import '../widgets/create_collection_dialog.dart';
 import 'collection_schema_screen.dart';
@@ -148,6 +151,22 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => const ProfileScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.settings_outlined,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                            tooltip: 'Settings',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SettingsScreen(),
                                 ),
                               );
                             },

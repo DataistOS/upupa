@@ -2,7 +2,7 @@
 name: upupa_frontend
 description: "UpUpa is the Backend-as-a-Service (BaaS) platform"
 issue_tracker: https://github.com/DataistOS/upupa/issues
-version: 0.1.9+1
+version: 0.2.0+1
 
 # Environment
 environment:
