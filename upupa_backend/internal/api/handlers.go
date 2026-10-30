@@ -237,7 +237,6 @@ func (a *API) validateRelations(col models.Collection, data map[string]interface
 	return nil
 }
 
-// تابع کمکی برای اعمال Expand روی رکوردها
 func (a *API) expandRecord(record *models.Record, expandParam string) error {
 	if expandParam == "" {
 		return nil

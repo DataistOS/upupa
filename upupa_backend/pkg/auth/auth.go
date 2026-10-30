@@ -13,8 +13,8 @@ const SECRET_KEY = "super_secret_upupa_key_change_me_in_production"
 func GenerateJWT(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-		"iat": time.Now().Unix(),
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"iat":     time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

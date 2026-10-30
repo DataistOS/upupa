@@ -276,7 +276,7 @@ func (s *SQLiteStore) ListRecords(collectionID string, opts ListOptions) ([]mode
 		return nil, fmt.Errorf("failed to parse filter: %w", err)
 	}
 
-	query := fmt.Sprintf(`SELECT id, data, created, updated FROM records WHERE collection_id = ?`,)
+	query := fmt.Sprintf(`SELECT id, data, created, updated FROM records WHERE collection_id = ?`)
 	args := []interface{}{collectionID}
 
 	if whereClause != "" {
