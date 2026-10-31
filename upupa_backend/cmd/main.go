@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"upupa_backend/internal/api"
@@ -18,7 +19,14 @@ import (
 
 const DB_FILE = "upupa_backend.db"
 
+var Version = "(untracked)"
+
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Println("Upupa Backend Version:", Version)
+		os.Exit(0)
+	}
+
 	log.Println("Initializing database...")
 
 	dbStore, err := store.NewSQLiteStore(DB_FILE)
