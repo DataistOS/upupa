@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/login_form.dart';
 import '../services/auth_service.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -52,6 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.of(context).pushReplacementNamed('/register');
   }
 
+  void _navigateToForgotPassword() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,10 +68,21 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.all(24.0),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: LoginForm(
-              onLoginSubmit: _handleLoginSubmit,
-              onNavigateToRegister: _navigateToRegister,
-              isLoading: _isLoading,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LoginForm(
+                  onLoginSubmit: _handleLoginSubmit,
+                  onNavigateToRegister: _navigateToRegister,
+                  isLoading: _isLoading,
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: _navigateToForgotPassword,
+                  child: const Text('Forgot Password?'),
+                ),
+              ],
             ),
           ),
         ),

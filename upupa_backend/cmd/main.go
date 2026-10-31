@@ -44,6 +44,11 @@ func main() {
 	}
 	log.Println("Log table initialized successfully.")
 
+	if err := dbStore.InitPasswordResetTable(); err != nil {
+		log.Fatalf("Failed to initialize password reset table: %v", err)
+	}
+	log.Println("Password reset table initialized successfully.")
+
 	if err := createSystemCollections(dbStore); err != nil {
 		log.Fatalf("Failed to create system collections: %v", err)
 	}
@@ -55,6 +60,8 @@ func main() {
 	log.Println("Product collection and test record initialized successfully.")
 
 	authHandler := auth.NewHandler(dbStore)
+	passwordResetHandler := auth.NewPasswordResetHandler(dbStore, dbStore)
+
 	profileHandler := profile.NewHandler(dbStore, dbStore)
 	storageHandler := storage.NewHandler(dbStore)
 	collectionHandler := collections.NewHandler(dbStore, dbStore, dbStore)
@@ -71,6 +78,9 @@ func main() {
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Post("/register", authHandler.RegisterHandler)
 		r.Post("/login", authHandler.LoginHandler)
+
+		r.Post("/auth/password-reset", passwordResetHandler.RequestPasswordResetHandler)
+		r.Post("/auth/password-reset-confirm", passwordResetHandler.ConfirmPasswordResetHandler)
 
 		r.Get("/profile", profileHandler.GetProfileHandler)
 		r.Put("/profile", profileHandler.UpdateProfileHandler)

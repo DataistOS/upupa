@@ -103,4 +103,38 @@ class AuthService extends ChangeNotifier {
     await prefs.remove('auth_token');
     notifyListeners();
   }
+
+  Future<void> requestPasswordReset(String email) async {
+    final uri = Uri.parse('$_baseUrl/auth/password-reset');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      final errorBody = json.decode(response.body);
+      throw Exception(
+        errorBody['error'] ??
+            'Failed to request password reset (status ${response.statusCode})',
+      );
+    }
+  }
+
+  Future<void> confirmPasswordReset(String token, String newPassword) async {
+    final uri = Uri.parse('$_baseUrl/auth/password-reset-confirm');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'token': token, 'new_password': newPassword}),
+    );
+
+    if (response.statusCode != 200) {
+      final errorBody = json.decode(response.body);
+      throw Exception(
+        errorBody['error'] ??
+            'Failed to reset password (status ${response.statusCode})',
+      );
+    }
+  }
 }
