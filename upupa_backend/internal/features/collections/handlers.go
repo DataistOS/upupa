@@ -1,5 +1,5 @@
-// upupa_backend/internal/api/handlers.go
-package api
+// upupa_backend/internal/features/collections/handlers.go
+package collections
 
 import (
 	"database/sql"
@@ -17,27 +17,27 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type API struct {
+type Handler struct {
 	Collections store.CollectionRepository
 	Records     store.RecordRepository
 	Users       store.UserRepository
 }
 
-func NewAPI(collections store.CollectionRepository, records store.RecordRepository, users store.UserRepository) *API {
-	return &API{
+func NewHandler(collections store.CollectionRepository, records store.RecordRepository, users store.UserRepository) *Handler {
+	return &Handler{
 		Collections: collections,
 		Records:     records,
 		Users:       users,
 	}
 }
 
-func (a *API) respondWithError(w http.ResponseWriter, code int, message string) {
+func (h *Handler) respondWithError(w http.ResponseWriter, code int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
 
-func (a *API) respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+func (h *Handler) respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	if payload != nil {
@@ -45,19 +45,19 @@ func (a *API) respondWithJSON(w http.ResponseWriter, code int, payload interface
 	}
 }
 
-func (a *API) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	a.respondWithJSON(w, http.StatusOK, map[string]string{"status": "ok", "version": "v1.0.0"})
+func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	h.respondWithJSON(w, http.StatusOK, map[string]string{"status": "ok", "version": "v1.0.0"})
 }
 
-func (a *API) CreateCollectionHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	var req models.Collection
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		a.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		h.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
 	if req.Name == "" {
-		a.respondWithError(w, http.StatusBadRequest, "Collection name is required")
+		h.respondWithError(w, http.StatusBadRequest, "Collection name is required")
 		return
 	}
 
@@ -74,68 +74,68 @@ func (a *API) CreateCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		req.Rules = []models.Rule{}
 	}
 
-	collection, err := a.Collections.CreateCollection(req)
+	collection, err := h.Collections.CreateCollection(req)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			a.respondWithError(w, http.StatusConflict, fmt.Sprintf("Collection with name '%s' already exists", req.Name))
+			h.respondWithError(w, http.StatusConflict, fmt.Sprintf("Collection with name '%s' already exists", req.Name))
 			return
 		}
 		log.Printf("Error creating collection: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to create collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to create collection")
 		return
 	}
 
-	a.respondWithJSON(w, http.StatusCreated, collection)
+	h.respondWithJSON(w, http.StatusCreated, collection)
 }
 
-func (a *API) ListCollectionsHandler(w http.ResponseWriter, r *http.Request) {
-	collections, err := a.Collections.GetAll()
+func (h *Handler) ListCollectionsHandler(w http.ResponseWriter, r *http.Request) {
+	collectionsList, err := h.Collections.GetAll()
 	if err != nil {
 		log.Printf("Error listing collections: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collections")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collections")
 		return
 	}
 
-	a.respondWithJSON(w, http.StatusOK, collections)
+	h.respondWithJSON(w, http.StatusOK, collectionsList)
 }
 
-func (a *API) GetCollectionHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 
-	col, err := a.Collections.GetByName(name)
+	col, err := h.Collections.GetByName(name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found")
 			return
 		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
 		return
 	}
 
-	a.respondWithJSON(w, http.StatusOK, col)
+	h.respondWithJSON(w, http.StatusOK, col)
 }
 
-func (a *API) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 
-	col, err := a.Collections.GetByName(name)
+	col, err := h.Collections.GetByName(name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found")
 			return
 		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
 		return
 	}
 
 	if col.System {
-		a.respondWithError(w, http.StatusForbidden, "Cannot modify system collection")
+		h.respondWithError(w, http.StatusForbidden, "Cannot modify system collection")
 		return
 	}
 
 	var req models.Collection
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		a.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		h.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
@@ -146,53 +146,53 @@ func (a *API) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		col.Rules = req.Rules
 	}
 
-	if _, err := a.Collections.UpdateCollection(*col); err != nil {
+	if _, err := h.Collections.UpdateCollection(*col); err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found during update")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found during update")
 			return
 		}
 		log.Printf("Error updating collection: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to update collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to update collection")
 		return
 	}
 
-	updatedCol, _ := a.Collections.GetByName(name)
-	a.respondWithJSON(w, http.StatusOK, updatedCol)
+	updatedCol, _ := h.Collections.GetByName(name)
+	h.respondWithJSON(w, http.StatusOK, updatedCol)
 }
 
-func (a *API) DeleteCollectionHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 
-	col, err := a.Collections.GetByName(name)
+	col, err := h.Collections.GetByName(name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found")
 			return
 		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
 		return
 	}
 
 	if col.System {
-		a.respondWithError(w, http.StatusForbidden, "Cannot delete system collection")
+		h.respondWithError(w, http.StatusForbidden, "Cannot delete system collection")
 		return
 	}
 
-	err = a.Collections.DeleteCollection(name)
+	err = h.Collections.DeleteCollection(name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found for deletion")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found for deletion")
 			return
 		}
 		log.Printf("Error deleting collection: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to delete collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to delete collection")
 		return
 	}
 
-	a.respondWithJSON(w, http.StatusNoContent, nil)
+	h.respondWithJSON(w, http.StatusNoContent, nil)
 }
 
-func (a *API) validateRelations(col models.Collection, data map[string]interface{}) error {
+func (h *Handler) validateRelations(col models.Collection, data map[string]interface{}) error {
 	for _, field := range col.Schema {
 		if field.Type == "relation" {
 			val, exists := data[field.Name]
@@ -211,7 +211,7 @@ func (a *API) validateRelations(col models.Collection, data map[string]interface
 				continue
 			}
 
-			allCols, err := a.Collections.GetAll()
+			allCols, err := h.Collections.GetAll()
 			if err != nil {
 				return fmt.Errorf("failed to verify target collection for field '%s'", field.Name)
 			}
@@ -228,7 +228,7 @@ func (a *API) validateRelations(col models.Collection, data map[string]interface
 				return fmt.Errorf("target collection for field '%s' not found", field.Name)
 			}
 
-			_, err = a.Records.GetByID(targetCol.ID, targetRecordID)
+			_, err = h.Records.GetByID(targetCol.ID, targetRecordID)
 			if err != nil {
 				return fmt.Errorf("referenced record ID '%s' in field '%s' does not exist", targetRecordID, field.Name)
 			}
@@ -237,7 +237,7 @@ func (a *API) validateRelations(col models.Collection, data map[string]interface
 	return nil
 }
 
-func (a *API) expandRecord(record *models.Record, expandParam string) error {
+func (h *Handler) expandRecord(record *models.Record, expandParam string) error {
 	if expandParam == "" {
 		return nil
 	}
@@ -245,7 +245,7 @@ func (a *API) expandRecord(record *models.Record, expandParam string) error {
 	fieldsToExpand := strings.Split(expandParam, ",")
 	record.Expand = make(map[string]interface{})
 
-	allCols, err := a.Collections.GetAll()
+	allCols, err := h.Collections.GetAll()
 	if err != nil {
 		return err
 	}
@@ -294,7 +294,7 @@ func (a *API) expandRecord(record *models.Record, expandParam string) error {
 			continue
 		}
 
-		refRecord, err := a.Records.GetByID(targetColl.ID, refID)
+		refRecord, err := h.Records.GetByID(targetColl.ID, refID)
 		if err == nil && refRecord != nil {
 			record.Expand[fieldName] = refRecord
 		}
@@ -303,34 +303,34 @@ func (a *API) expandRecord(record *models.Record, expandParam string) error {
 	return nil
 }
 
-func (a *API) CreateRecordHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateRecordHandler(w http.ResponseWriter, r *http.Request) {
 	collectionName := chi.URLParam(r, "name")
 
-	col, err := a.Collections.GetByName(collectionName)
+	col, err := h.Collections.GetByName(collectionName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found")
 			return
 		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
 		return
 	}
 
 	authHeader := r.Header.Get("Authorization")
 	isAuthenticated := authHeader != "" && strings.HasPrefix(authHeader, "Bearer ")
 	if ruleErr := CheckCollectionRule(*col, "create", isAuthenticated); ruleErr != nil {
-		a.respondWithError(w, http.StatusForbidden, ruleErr.Error())
+		h.respondWithError(w, http.StatusForbidden, ruleErr.Error())
 		return
 	}
 
 	var data map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		a.respondWithError(w, http.StatusBadRequest, "Invalid record payload")
+		h.respondWithError(w, http.StatusBadRequest, "Invalid record payload")
 		return
 	}
 
-	if err := a.validateRelations(*col, data); err != nil {
-		a.respondWithError(w, http.StatusBadRequest, err.Error())
+	if err := h.validateRelations(*col, data); err != nil {
+		h.respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -342,33 +342,33 @@ func (a *API) CreateRecordHandler(w http.ResponseWriter, r *http.Request) {
 		Data:         data,
 	}
 
-	createdRecord, err := a.Records.CreateRecord(record)
+	createdRecord, err := h.Records.CreateRecord(record)
 	if err != nil {
 		log.Printf("Error creating record: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to create record")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to create record")
 		return
 	}
 
-	a.respondWithJSON(w, http.StatusCreated, createdRecord)
+	h.respondWithJSON(w, http.StatusCreated, createdRecord)
 }
 
-func (a *API) ListRecordsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ListRecordsHandler(w http.ResponseWriter, r *http.Request) {
 	collectionName := chi.URLParam(r, "name")
 
-	col, err := a.Collections.GetByName(collectionName)
+	col, err := h.Collections.GetByName(collectionName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found")
 			return
 		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
 		return
 	}
 
 	authHeader := r.Header.Get("Authorization")
 	isAuthenticated := authHeader != "" && strings.HasPrefix(authHeader, "Bearer ")
 	if ruleErr := CheckCollectionRule(*col, "list", isAuthenticated); ruleErr != nil {
-		a.respondWithError(w, http.StatusForbidden, ruleErr.Error())
+		h.respondWithError(w, http.StatusForbidden, ruleErr.Error())
 		return
 	}
 
@@ -397,10 +397,10 @@ func (a *API) ListRecordsHandler(w http.ResponseWriter, r *http.Request) {
 		Filter:  filter,
 	}
 
-	records, err := a.Records.ListRecords(col.ID, opts)
+	records, err := h.Records.ListRecords(col.ID, opts)
 	if err != nil {
 		log.Printf("Error listing records: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to retrieve records: %v", err))
+		h.respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to retrieve records: %v", err))
 		return
 	}
 
@@ -410,82 +410,82 @@ func (a *API) ListRecordsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if expandParam != "" {
 		for i := range records {
-			_ = a.expandRecord(&records[i], expandParam)
+			_ = h.expandRecord(&records[i], expandParam)
 		}
 	}
 
-	a.respondWithJSON(w, http.StatusOK, records)
+	h.respondWithJSON(w, http.StatusOK, records)
 }
 
-func (a *API) GetRecordHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetRecordHandler(w http.ResponseWriter, r *http.Request) {
 	collectionName := chi.URLParam(r, "name")
 	recordID := chi.URLParam(r, "id")
 	expandParam := r.URL.Query().Get("expand")
 
-	col, err := a.Collections.GetByName(collectionName)
+	col, err := h.Collections.GetByName(collectionName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found")
 			return
 		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
 		return
 	}
 
 	authHeader := r.Header.Get("Authorization")
 	isAuthenticated := authHeader != "" && strings.HasPrefix(authHeader, "Bearer ")
 	if ruleErr := CheckCollectionRule(*col, "view", isAuthenticated); ruleErr != nil {
-		a.respondWithError(w, http.StatusForbidden, ruleErr.Error())
+		h.respondWithError(w, http.StatusForbidden, ruleErr.Error())
 		return
 	}
 
-	record, err := a.Records.GetByID(col.ID, recordID)
+	record, err := h.Records.GetByID(col.ID, recordID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Record not found")
+			h.respondWithError(w, http.StatusNotFound, "Record not found")
 			return
 		}
 		log.Printf("Error retrieving record: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve record")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve record")
 		return
 	}
 
 	if expandParam != "" {
-		_ = a.expandRecord(record, expandParam)
+		_ = h.expandRecord(record, expandParam)
 	}
 
-	a.respondWithJSON(w, http.StatusOK, record)
+	h.respondWithJSON(w, http.StatusOK, record)
 }
 
-func (a *API) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 	collectionName := chi.URLParam(r, "name")
 	recordID := chi.URLParam(r, "id")
 
-	col, err := a.Collections.GetByName(collectionName)
+	col, err := h.Collections.GetByName(collectionName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found")
 			return
 		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
 		return
 	}
 
 	authHeader := r.Header.Get("Authorization")
 	isAuthenticated := authHeader != "" && strings.HasPrefix(authHeader, "Bearer ")
 	if ruleErr := CheckCollectionRule(*col, "update", isAuthenticated); ruleErr != nil {
-		a.respondWithError(w, http.StatusForbidden, ruleErr.Error())
+		h.respondWithError(w, http.StatusForbidden, ruleErr.Error())
 		return
 	}
 
-	record, err := a.Records.GetByID(col.ID, recordID)
+	record, err := h.Records.GetByID(col.ID, recordID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Record not found")
+			h.respondWithError(w, http.StatusNotFound, "Record not found")
 			return
 		}
 		log.Printf("Error retrieving record for update: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve record")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve record")
 		return
 	}
 
@@ -493,7 +493,7 @@ func (a *API) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 		Data map[string]interface{} `json:"data"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		a.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		h.respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
@@ -505,8 +505,8 @@ func (a *API) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 		mergedData[k] = v
 	}
 
-	if err := a.validateRelations(*col, mergedData); err != nil {
-		a.respondWithError(w, http.StatusBadRequest, err.Error())
+	if err := h.validateRelations(*col, mergedData); err != nil {
+		h.respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -516,51 +516,51 @@ func (a *API) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	record.Updated = time.Now()
 
-	if err := a.Records.Update(*record); err != nil {
+	if err := h.Records.Update(*record); err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Record not found during update")
+			h.respondWithError(w, http.StatusNotFound, "Record not found during update")
 			return
 		}
 		log.Printf("Error updating record: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to update record")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to update record")
 		return
 	}
 
-	updatedRecord, _ := a.Records.GetByID(col.ID, recordID)
-	a.respondWithJSON(w, http.StatusOK, updatedRecord)
+	updatedRecord, _ := h.Records.GetByID(col.ID, recordID)
+	h.respondWithJSON(w, http.StatusOK, updatedRecord)
 }
 
-func (a *API) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 	collectionName := chi.URLParam(r, "name")
 	recordID := chi.URLParam(r, "id")
 
-	col, err := a.Collections.GetByName(collectionName)
+	col, err := h.Collections.GetByName(collectionName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Collection not found")
+			h.respondWithError(w, http.StatusNotFound, "Collection not found")
 			return
 		}
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to retrieve collection")
 		return
 	}
 
 	authHeader := r.Header.Get("Authorization")
 	isAuthenticated := authHeader != "" && strings.HasPrefix(authHeader, "Bearer ")
 	if ruleErr := CheckCollectionRule(*col, "delete", isAuthenticated); ruleErr != nil {
-		a.respondWithError(w, http.StatusForbidden, ruleErr.Error())
+		h.respondWithError(w, http.StatusForbidden, ruleErr.Error())
 		return
 	}
 
-	err = a.Records.DeleteRecord(col.ID, recordID)
+	err = h.Records.DeleteRecord(col.ID, recordID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			a.respondWithError(w, http.StatusNotFound, "Record not found")
+			h.respondWithError(w, http.StatusNotFound, "Record not found")
 			return
 		}
 		log.Printf("Error deleting record: %v", err)
-		a.respondWithError(w, http.StatusInternalServerError, "Failed to delete record")
+		h.respondWithError(w, http.StatusInternalServerError, "Failed to delete record")
 		return
 	}
 
-	a.respondWithJSON(w, http.StatusNoContent, nil)
+	h.respondWithJSON(w, http.StatusNoContent, nil)
 }

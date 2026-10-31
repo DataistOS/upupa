@@ -1,5 +1,5 @@
-// upupa_backend/internal/api/log_handlers.go
-package api
+// upupa_backend/internal/features/logs/handlers.go
+package logs
 
 import (
 	"encoding/json"
@@ -61,12 +61,12 @@ func GetLogsHandler(logRepo LogRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		logs, err := logRepo.GetLogs(100)
+		logsList, err := logRepo.GetLogs(100)
 		if err != nil {
 			http.Error(w, `{"error": "Failed to fetch logs"}`, http.StatusInternalServerError)
 			return
 		}
 
-		json.NewEncoder(w).Encode(logs)
+		json.NewEncoder(w).Encode(logsList)
 	}
 }

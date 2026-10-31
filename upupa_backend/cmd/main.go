@@ -8,7 +8,11 @@ import (
 	"os"
 	"time"
 
-	"upupa_backend/internal/api"
+	"upupa_backend/internal/features/auth"
+	"upupa_backend/internal/features/collections"
+	"upupa_backend/internal/features/logs"
+	"upupa_backend/internal/features/profile"
+	"upupa_backend/internal/features/storage"
 	"upupa_backend/internal/store"
 	"upupa_backend/pkg/models"
 
@@ -17,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const DB_FILE = "upupa_backend.db"
+const DB_FILE = "storage/upupa_backend.db"
 
 var Version = "(untracked)"
 
@@ -50,44 +54,48 @@ func main() {
 	}
 	log.Println("Product collection and test record initialized successfully.")
 
-	apiService := api.NewAPI(dbStore, dbStore, dbStore)
+	authHandler := auth.NewHandler(dbStore)
+	profileHandler := profile.NewHandler(dbStore, dbStore)
+	storageHandler := storage.NewHandler(dbStore)
+	collectionHandler := collections.NewHandler(dbStore, dbStore, dbStore)
+
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
-	router.Use(api.RequestLoggerMiddleware(dbStore))
+	router.Use(logs.RequestLoggerMiddleware(dbStore))
 
-	router.Get("/health", apiService.HealthCheck)
+	router.Get("/health", collectionHandler.HealthCheck)
 
 	router.Route("/api/v1", func(r chi.Router) {
-		r.Post("/register", apiService.RegisterHandler)
-		r.Post("/login", apiService.LoginHandler)
+		r.Post("/register", authHandler.RegisterHandler)
+		r.Post("/login", authHandler.LoginHandler)
 
-		r.Get("/profile", apiService.GetProfileHandler)
-		r.Put("/profile", apiService.UpdateProfileHandler)
+		r.Get("/profile", profileHandler.GetProfileHandler)
+		r.Put("/profile", profileHandler.UpdateProfileHandler)
 
-		r.Get("/logs", api.GetLogsHandler(dbStore))
+		r.Get("/logs", logs.GetLogsHandler(dbStore))
 
-		r.Post("/files", apiService.UploadFileHandler)
-		r.Get("/files/{filename}", apiService.ServeFileHandler)
+		r.Post("/files", storageHandler.UploadFileHandler)
+		r.Get("/files/{filename}", storageHandler.ServeFileHandler)
 
-		r.Post("/collections", apiService.CreateCollectionHandler)
-		r.Get("/collections", apiService.ListCollectionsHandler)
+		r.Post("/collections", collectionHandler.CreateCollectionHandler)
+		r.Get("/collections", collectionHandler.ListCollectionsHandler)
 
 		r.Route("/collections/{name}", func(r chi.Router) {
-			r.Get("/", apiService.GetCollectionHandler)
-			r.Patch("/", apiService.UpdateCollectionHandler)
-			r.Delete("/", apiService.DeleteCollectionHandler)
+			r.Get("/", collectionHandler.GetCollectionHandler)
+			r.Patch("/", collectionHandler.UpdateCollectionHandler)
+			r.Delete("/", collectionHandler.DeleteCollectionHandler)
 
-			r.Post("/records", apiService.CreateRecordHandler)
-			r.Get("/records", apiService.ListRecordsHandler)
+			r.Post("/records", collectionHandler.CreateRecordHandler)
+			r.Get("/records", collectionHandler.ListRecordsHandler)
 
 			r.Route("/records/{id}", func(r chi.Router) {
-				r.Get("/", apiService.GetRecordHandler)
-				r.Patch("/", apiService.UpdateRecordHandler)
-				r.Put("/", apiService.UpdateRecordHandler)
-				r.Delete("/", apiService.DeleteRecordHandler)
+				r.Get("/", collectionHandler.GetRecordHandler)
+				r.Patch("/", collectionHandler.UpdateRecordHandler)
+				r.Put("/", collectionHandler.UpdateRecordHandler)
+				r.Delete("/", collectionHandler.DeleteRecordHandler)
 			})
 		})
 	})

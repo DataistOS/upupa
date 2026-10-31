@@ -1,5 +1,5 @@
-// upupa_backend/internal/api/rules.go
-package api
+// upupa_backend/internal/features/collections/rules.go
+package collections
 
 import (
 	"fmt"
