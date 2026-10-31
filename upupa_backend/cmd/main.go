@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/spf13/cobra"
 )
 
 const DB_FILE = "upupa_backend.db"
@@ -22,11 +22,6 @@ const DB_FILE = "upupa_backend.db"
 var Version = "(untracked)"
 
 func main() {
-	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
-		fmt.Println("Upupa Backend Version:", Version)
-		os.Exit(0)
-	}
-
 	log.Println("Initializing database...")
 
 	dbStore, err := store.NewSQLiteStore(DB_FILE)
@@ -97,10 +92,32 @@ func main() {
 		})
 	})
 
-	const port = "8888"
-	log.Printf("Server starting on :%s...", port)
-	if err := http.ListenAndServe(":"+port, router); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
+	var showVersion bool
+	var rootCmd = &cobra.Command{
+		Use:   "upupa",
+		Short: "Upupa backend CLI management tool",
+		Run: func(cmd *cobra.Command, args []string) {
+			if showVersion {
+				fmt.Printf("Upupa Backend Version: %s\n", Version)
+				return
+			}
+			cmd.Help()
+		},
+	}
+
+	rootCmd.PersistentFlags().BoolVarP(
+		&showVersion,
+		"version",
+		"v",
+		false,
+		"Print the version of Upupa backend",
+	)
+
+	rootCmd.AddCommand(NewServeCommand(router, Version))
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
