@@ -18,6 +18,7 @@
 # --- Backend (upupa_backend) ---
 # Ignore the local SQLite database
 upupa_backend/storage
+upupa_backend/internal/features/backup/download
 
 # Ignore binaries and test outputs
 upupa_backend/cmd/*.exe

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"upupa_backend/internal/features/auth"
+	"upupa_backend/internal/features/backup"
 	"upupa_backend/internal/features/collections"
 	"upupa_backend/internal/features/logs"
 	"upupa_backend/internal/features/profile"
@@ -66,6 +67,8 @@ func main() {
 	storageHandler := storage.NewHandler(dbStore)
 	collectionHandler := collections.NewHandler(dbStore, dbStore, dbStore)
 
+	backupHandler := backup.NewHandler(DB_FILE)
+
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
@@ -86,6 +89,8 @@ func main() {
 		r.Put("/profile", profileHandler.UpdateProfileHandler)
 
 		r.Get("/logs", logs.GetLogsHandler(dbStore))
+
+		r.Get("/backup", backupHandler.DownloadBackup)
 
 		r.Post("/files", storageHandler.UploadFileHandler)
 		r.Get("/files/{filename}", storageHandler.ServeFileHandler)
