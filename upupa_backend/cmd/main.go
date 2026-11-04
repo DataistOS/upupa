@@ -3,9 +3,13 @@ package main
 
 import (
 	"database/sql"
+	"embed"
 	"fmt"
+	"io/fs"
 	"log"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"upupa_backend/internal/features/auth"
@@ -21,6 +25,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/spf13/cobra"
 )
+
+//go:embed static/*
+var webAssets embed.FS
 
 const DB_FILE = "storage/upupa_backend.db"
 
@@ -71,8 +78,24 @@ func main() {
 
 	router := chi.NewRouter()
 
+	// میدل‌ورهای عمومی سرور
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	router.Use(logs.RequestLoggerMiddleware(dbStore))
 
@@ -98,22 +121,43 @@ func main() {
 		r.Post("/collections", collectionHandler.CreateCollectionHandler)
 		r.Get("/collections", collectionHandler.ListCollectionsHandler)
 
-		r.Route("/collections/{name}", func(r chi.Router) {
-			r.Get("/", collectionHandler.GetCollectionHandler)
-			r.Patch("/", collectionHandler.UpdateCollectionHandler)
-			r.Delete("/", collectionHandler.DeleteCollectionHandler)
+		r.Route("/collections/{name}", func(subRouter chi.Router) {
+			subRouter.Get("/", collectionHandler.GetCollectionHandler)
+			subRouter.Patch("/", collectionHandler.UpdateCollectionHandler)
+			subRouter.Delete("/", collectionHandler.DeleteCollectionHandler)
 
-			r.Post("/records", collectionHandler.CreateRecordHandler)
-			r.Get("/records", collectionHandler.ListRecordsHandler)
+			subRouter.Post("/records", collectionHandler.CreateRecordHandler)
+			subRouter.Get("/records", collectionHandler.ListRecordsHandler)
 
-			r.Route("/records/{id}", func(r chi.Router) {
-				r.Get("/", collectionHandler.GetRecordHandler)
-				r.Patch("/", collectionHandler.UpdateRecordHandler)
-				r.Put("/", collectionHandler.UpdateRecordHandler)
-				r.Delete("/", collectionHandler.DeleteRecordHandler)
+			subRouter.Route("/records/{id}", func(recordRouter chi.Router) {
+				recordRouter.Get("/", collectionHandler.GetRecordHandler)
+				recordRouter.Patch("/", collectionHandler.UpdateRecordHandler)
+				recordRouter.Put("/", collectionHandler.UpdateRecordHandler)
+				recordRouter.Delete("/", collectionHandler.DeleteRecordHandler)
 			})
 		})
 	})
+
+	subFS, err := fs.Sub(webAssets, "static")
+	if err != nil {
+		log.Printf("Warning: Failed to initialize embedded static assets: %v", err)
+	} else {
+		fileServer := http.FileServer(http.FS(subFS))
+		router.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+			path := r.URL.Path
+			cleanedPath := strings.TrimPrefix(path, "/")
+			if cleanedPath == "" || cleanedPath == "/" {
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+			if _, err := subFS.Open(cleanedPath); err == nil {
+				fileServer.ServeHTTP(w, r)
+			} else {
+				r.URL.Path = "/"
+				fileServer.ServeHTTP(w, r)
+			}
+		})
+	}
 
 	var showVersion bool
 	var rootCmd = &cobra.Command{

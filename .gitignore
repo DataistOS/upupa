@@ -31,6 +31,9 @@ upupa_backend/cmd/storage/
 go.work
 go.work.sum
 
+# --- Embedded Static Frontend ---
+upupa_backend/cmd/static/
+
 # --- Frontend (upupa_frontend) ---
 # Dart/Flutter specific
 upupa_frontend/.dart_tool/
