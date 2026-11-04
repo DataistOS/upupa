@@ -2,7 +2,7 @@
 name: upupa_frontend
 description: "UpUpa is the Backend-as-a-Service (BaaS) platform"
 issue_tracker: https://github.com/DataistOS/upupa/issues
-version: 0.2.3+1
+version: 0.2.4+1
 
 # Environment
 environment:
@@ -34,6 +34,9 @@ dependencies:
 
   # State Management
   provider: ^6.1.5+1
+
+  # Charts & Visualization
+  fl_chart: ^1.1.0
 
 # Development Dependencies
 dev_dependencies:

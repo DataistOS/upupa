@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/request_log.dart';
 import '../services/log_service.dart';
+import '../widgets/log_chart_widget.dart';
 
 class LogsScreen extends StatefulWidget {
   const LogsScreen({super.key});
@@ -47,7 +48,6 @@ class _LogsScreenState extends State<LogsScreen> {
     return Colors.grey.shade800;
   }
 
-  // تعیین رنگ متد HTTP
   Color _getMethodColor(String method) {
     switch (method.toUpperCase()) {
       case 'GET':
@@ -82,40 +82,43 @@ class _LogsScreenState extends State<LogsScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
+        child: FutureBuilder<List<RequestLog>>(
+          future: _logsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error loading logs: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red),
                 ),
-                child: FutureBuilder<List<RequestLog>>(
-                  future: _logsFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(
-                        child: Text(
-                          'Error loading logs: ${snapshot.error}',
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      );
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'No request logs found.',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      );
-                    }
+              );
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                child: Text(
+                  'No request logs found.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              );
+            }
 
-                    final logs = snapshot.data!;
+            final logs = snapshot.data!;
 
-                    return ListView(
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LogChartWidget(logs: logs),
+                const SizedBox(height: 20),
+
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: ListView(
                       scrollDirection: Axis.vertical,
                       children: [
                         SingleChildScrollView(
@@ -206,12 +209,12 @@ class _LogsScreenState extends State<LogsScreen> {
                           ),
                         ),
                       ],
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );

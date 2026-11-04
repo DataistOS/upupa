@@ -14,15 +14,12 @@ class BackupService {
       final uri = Uri.parse('$_baseUrl/backup');
       final response = await http.get(
         uri,
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+        headers: {if (token != null) 'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
         final bytes = response.bodyBytes;
         log('Backup downloaded successfully, size: ${bytes.length} bytes');
-
       } else {
         throw Exception('Failed to download backup: ${response.statusCode}');
       }
