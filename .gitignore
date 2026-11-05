@@ -1,5 +1,5 @@
 # =================================================================
-# Custom .gitignore for UPUPA Project (Go + Flutter)
+# Custom .gitignore for UPUPA Project (Go + Flutter + Dart SDK)
 # =================================================================
 
 # --- OS & IDEs ---
@@ -33,6 +33,12 @@ go.work.sum
 
 # --- Embedded Static Frontend ---
 upupa_backend/cmd/static/
+
+# --- Dart SDK (upupa_dart) ---
+upupa_dart/.dart_tool/
+upupa_dart/.pub/
+upupa_dart/build/
+upupa_dart/pubspec.lock
 
 # --- Frontend (upupa_frontend) ---
 # Dart/Flutter specific

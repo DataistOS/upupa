@@ -1,0 +1,29 @@
+# General Section (Metadata)
+name: upupa_dart
+description: "Official Dart SDK for the Upupa Backend-as-a-Service (BaaS) platform"
+issue_tracker: https://github.com/DataistOS/upupa/issues
+version: 0.1.0+1
+
+# Environment
+environment:
+  sdk: ^3.8.1
+
+# Dependencies
+dependencies:
+  # Network & API
+  http: ^1.6.0
+
+  # Serialization & Models
+  json_annotation: ^4.9.0
+
+# Development Dependencies
+dev_dependencies:
+  # Testing Framework
+  test: ^1.25.0
+
+  # Linter / Code Style
+  flutter_lints: ^5.0.0
+
+  # Code Generation & Build Tools
+  build_runner: ^2.10.4
+  json_serializable: ^6.11.2
