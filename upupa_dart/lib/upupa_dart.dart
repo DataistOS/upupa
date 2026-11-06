@@ -10,5 +10,6 @@ export 'src/models/collection.dart';
 export 'src/services/base_service.dart';
 export 'src/services/auth_service.dart';
 export 'src/services/record_service.dart';
+export 'src/services/collection_service.dart';
 
 export 'src/exceptions.dart';

@@ -2,17 +2,20 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_store.dart';
+import 'services/collection_service.dart';
 
 class UpupaClient {
   final String baseUrl;
-
   final AuthStore authStore;
-
   final http.Client _httpClient;
+
+  late final CollectionService collections;
 
   UpupaClient(this.baseUrl, {AuthStore? authStore, http.Client? httpClient})
     : authStore = authStore ?? AuthStore(),
-      _httpClient = httpClient ?? http.Client();
+      _httpClient = httpClient ?? http.Client() {
+    collections = CollectionService(this);
+  }
 
   Map<String, String> buildHeaders({Map<String, String>? customHeaders}) {
     final headers = <String, String>{
@@ -48,6 +51,17 @@ class UpupaClient {
       url,
       headers: buildHeaders(customHeaders: headers),
       body: body != null ? jsonEncode(body) : null,
+    );
+  }
+
+  Future<http.Response> sendDelete(
+    String path, {
+    Map<String, String>? headers,
+  }) async {
+    final url = Uri.parse('$baseUrl$path');
+    return await _httpClient.delete(
+      url,
+      headers: buildHeaders(customHeaders: headers),
     );
   }
 
