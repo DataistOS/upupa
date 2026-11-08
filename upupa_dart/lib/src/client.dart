@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_store.dart';
 import 'services/collection_service.dart';
+import 'services/record_service.dart';
 
 class UpupaClient {
   final String baseUrl;
@@ -10,11 +11,13 @@ class UpupaClient {
   final http.Client _httpClient;
 
   late final CollectionService collections;
+  late final RecordService records;
 
   UpupaClient(this.baseUrl, {AuthStore? authStore, http.Client? httpClient})
     : authStore = authStore ?? AuthStore(),
       _httpClient = httpClient ?? http.Client() {
     collections = CollectionService(this);
+    records = RecordService(this);
   }
 
   Map<String, String> buildHeaders({Map<String, String>? customHeaders}) {

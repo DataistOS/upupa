@@ -159,7 +159,6 @@ class _LogsScreenState extends State<LogsScreen> {
                                       ),
                                     ),
                                   ),
-                                  // آدرس URL
                                   DataCell(
                                     Text(
                                       log.url,

@@ -85,12 +85,29 @@ class _CollectionSchemaScreenState extends State<CollectionSchemaScreen> {
   }
 
   void _showAddFieldDialog() {
-    showDialog<Field>(
+    showGeneralDialog<Field>(
       context: context,
-      builder: (context) => AddFieldDialog(
-        existingFields: _fields,
-        availableCollections: _allCollections,
-      ),
+      barrierDismissible: true,
+      barrierLabel: 'Close',
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return AddFieldDialog(
+          existingFields: _fields,
+          availableCollections: _allCollections,
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position:
+              Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              ),
+          child: child,
+        );
+      },
     ).then((newField) {
       if (newField != null) {
         _onFieldAdded(newField);

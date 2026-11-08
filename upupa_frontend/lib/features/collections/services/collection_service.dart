@@ -7,7 +7,7 @@ import '../models/field.dart';
 import '../models/rule.dart';
 import '../../auth/services/auth_service.dart';
 
-const String _baseUrl = 'http://127.0.0.1:8888/api/v1';
+const String _baseUrl = 'http://127.0.0.1:8090/api/v1';
 
 class CollectionService {
   final String collectionName;

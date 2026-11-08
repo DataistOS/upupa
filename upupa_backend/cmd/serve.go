@@ -24,7 +24,7 @@ func NewServeCommand(handler http.Handler, version string) *cobra.Command {
 			}
 
 			if httpAddr == "" {
-				httpAddr = "127.0.0.1:8888"
+				httpAddr = "127.0.0.1:8090"
 			}
 
 			fmt.Printf("Server starting on http://%s...\n", httpAddr)
@@ -41,8 +41,8 @@ func NewServeCommand(handler http.Handler, version string) *cobra.Command {
 	command.PersistentFlags().StringVar(
 		&httpAddr,
 		"http",
-		"127.0.0.1:8888",
-		"TCP address to listen for the HTTP server (e.g. 127.0.0.1:8888)",
+		"127.0.0.1:8090",
+		"TCP address to listen for the HTTP server (e.g. 127.0.0.1:8090)",
 	)
 
 	command.PersistentFlags().BoolVarP(

@@ -1,13 +1,12 @@
 // upupa_dart/lib/src/services/record_service.dart
-import 'dart:async';
-
 import 'base_service.dart';
 import '../client.dart';
+import '../models/record.dart';
 
 class RecordService extends BaseService {
   RecordService(UpupaClient client) : super(client);
 
-  Future<dynamic> getList(
+  Future<List<Record>> getList(
     String collectionName, {
     int page = 1,
     int perPage = 30,
@@ -22,46 +21,54 @@ class RecordService extends BaseService {
     };
 
     final uri = Uri.parse(
-      '/api/collections/$collectionName/records',
+      '/api/v1/collections/$collectionName/records',
     ).replace(queryParameters: queryParams);
 
     final response = await client.sendGet(uri.toString());
-    return handleResponse(response) as Map<String, dynamic>;
+    final data = handleResponse(response);
+
+    if (data is List) {
+      return data.map((jsonItem) => Record.fromJson(jsonItem)).toList();
+    }
+    return [];
   }
 
-  Future<dynamic> getOne(String collectionName, String recordId) async {
+  Future<Record> getOne(String collectionName, String recordId) async {
     final response = await client.sendGet(
-      '/api/collections/$collectionName/records/$recordId',
+      '/api/v1/collections/$collectionName/records/$recordId',
     );
-    return handleResponse(response) as Map<String, dynamic>;
+    final data = handleResponse(response);
+    return Record.fromJson(data);
   }
 
-  Future<dynamic> create(
+  Future<Record> create(
     String collectionName,
     Map<String, dynamic> bodyData,
   ) async {
     final response = await client.sendPost(
-      '/api/collections/$collectionName/records',
+      '/api/v1/collections/$collectionName/records',
       body: bodyData,
     );
-    return handleResponse(response) as Map<String, dynamic>;
+    final data = handleResponse(response);
+    return Record.fromJson(data);
   }
 
-  Future<dynamic> update(
+  Future<Record> update(
     String collectionName,
     String recordId,
     Map<String, dynamic> bodyData,
   ) async {
     final response = await client.sendPost(
-      '/api/collections/$collectionName/records/$recordId',
-      body: {'data': bodyData},
+      '/api/v1/collections/$collectionName/records/$recordId',
+      body: bodyData,
     );
-    return handleResponse(response) as Map<String, dynamic>;
+    final data = handleResponse(response);
+    return Record.fromJson(data);
   }
 
   Future<void> delete(String collectionName, String recordId) async {
-    final response = await client.sendPost(
-      '/api/collections/$collectionName/records/$recordId/delete',
+    final response = await client.sendDelete(
+      '/api/v1/collections/$collectionName/records/$recordId',
     );
     handleResponse(response);
   }

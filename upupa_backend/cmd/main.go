@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed static/*
 var webAssets embed.FS
 
 const DB_FILE = "storage/upupa_backend.db"
@@ -78,7 +77,6 @@ func main() {
 
 	router := chi.NewRouter()
 
-	// میدل‌ورهای عمومی سرور
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 

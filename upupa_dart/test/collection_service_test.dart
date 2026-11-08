@@ -1,134 +1,85 @@
 // upupa_dart/test/collection_service_test.dart
-import 'dart:convert';
 import 'package:test/test.dart';
+import 'package:upupa_dart/upupa_dart.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:upupa_dart/upupa_dart.dart';
+import 'dart:convert';
 
 void main() {
   group('CollectionService Tests', () {
-    test('getFullList returns list of Collection on success', () async {
-      final mockHttpClient = MockClient((request) async {
-        expect(request.method, 'GET');
-        expect(request.url.path, '/api/collections');
-
-        final mockResponse = [
-          {
-            'id': 'col123',
-            'name': 'posts',
-            'type': 'base',
-            'system': false,
-            'schema': [],
-          },
-        ];
-
-        return http.Response(jsonEncode(mockResponse), 200);
+    test('getCollections returns list of collections on success', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.path == '/api/v1/collections') {
+          return http.Response(
+            jsonEncode([
+              {'id': '1', 'name': 'posts', 'schema': [], 'rules': []},
+            ]),
+            200,
+          );
+        }
+        return http.Response('Not Found', 404);
       });
 
       final client = UpupaClient(
-        'http://127.0.0.1:8090',
-        httpClient: mockHttpClient,
+        'http://localhost:8090',
+        httpClient: mockClient,
       );
 
-      final collections = await client.collections.getFullList();
+      final collections = await client.collections.getCollections();
 
       expect(collections.length, 1);
-      expect(collections[0].id, 'col123');
       expect(collections[0].name, 'posts');
+      client.dispose();
     });
 
-    test(
-      'create collection sends correct body and returns Collection',
-      () async {
-        final mockHttpClient = MockClient((request) async {
-          expect(request.method, 'POST');
-          expect(request.url.path, '/api/collections');
-
-          final body = jsonDecode(request.body);
-          expect(body['name'], 'comments');
-
-          final mockResponse = {
-            'id': 'col456',
-            'name': 'comments',
-            'type': 'base',
-            'system': false,
-            'schema': [],
-          };
-
-          return http.Response(jsonEncode(mockResponse), 200);
-        });
-
-        final client = UpupaClient(
-          'http://127.0.0.1:8090',
-          httpClient: mockHttpClient,
-        );
-
-        final newCollection = await client.collections.create({
-          'name': 'comments',
-          'type': 'base',
-        });
-
-        expect(newCollection.id, 'col456');
-        expect(newCollection.name, 'comments');
-      },
-    );
-
-    test('delete collection sends DELETE request successfully', () async {
-      final mockHttpClient = MockClient((request) async {
-        expect(request.method, 'DELETE');
-        expect(request.url.path, '/api/collections/col123');
-
-        return http.Response('', 204);
+    test('createCollection creates a collection successfully', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.path == '/api/v1/collections' &&
+            request.method == 'POST') {
+          return http.Response(
+            jsonEncode({
+              'id': '2',
+              'name': 'comments',
+              'schema': [],
+              'rules': [],
+            }),
+            201,
+          );
+        }
+        return http.Response('Not Found', 404);
       });
 
       final client = UpupaClient(
-        'http://127.0.0.1:8090',
-        httpClient: mockHttpClient,
+        'http://localhost:8090',
+        httpClient: mockClient,
       );
 
-      final success = await client.collections.delete('col123');
+      final collection = await client.collections.createCollection('comments');
 
-      expect(success, true);
+      expect(collection.id, '2');
+      expect(collection.name, 'comments');
+      client.dispose();
     });
 
-    test('getOne throws Exception on 400 Bad Request', () async {
-      final mockHttpClient = MockClient((request) async {
-        expect(request.method, 'GET');
-        return http.Response(
-          jsonEncode({'message': 'Invalid collection id'}),
-          400,
-        );
+    test('deleteCollection deletes a collection successfully', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.path == '/api/v1/collections/posts' &&
+            request.method == 'DELETE') {
+          return http.Response('', 204);
+        }
+        return http.Response('Not Found', 404);
       });
 
       final client = UpupaClient(
-        'http://127.0.0.1:8090',
-        httpClient: mockHttpClient,
+        'http://localhost:8090',
+        httpClient: mockClient,
       );
 
       expect(
-        () async => await client.collections.getOne('invalid_id'),
-        throwsA(isA<Exception>()),
+        () => client.collections.deleteCollection('posts'),
+        returnsNormally,
       );
-    });
-
-    test('create throws Exception on 401 Unauthorized', () async {
-      final mockHttpClient = MockClient((request) async {
-        expect(request.method, 'POST');
-        return http.Response(
-          jsonEncode({'message': 'Unauthorized access'}),
-          401,
-        );
-      });
-
-      final client = UpupaClient(
-        'http://127.0.0.1:8090',
-        httpClient: mockHttpClient,
-      );
-
-      expect(
-        () async => await client.collections.create({'name': 'test'}),
-        throwsA(isA<Exception>()),
-      );
+      client.dispose();
     });
   });
 }

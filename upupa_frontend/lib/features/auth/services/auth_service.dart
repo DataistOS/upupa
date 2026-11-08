@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user.dart';
 
-const String _baseUrl = 'http://127.0.0.1:8888/api/v1';
+const String _baseUrl = 'http://127.0.0.1:8090/api/v1';
 
 class AuthService extends ChangeNotifier {
   static final AuthService _instance = AuthService._internal();

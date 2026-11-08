@@ -13,7 +13,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _darkMode = false;
   bool _notificationsEnabled = true;
   final TextEditingController _serverUrlController = TextEditingController(
-    text: 'http://localhost:8888/api/v1',
+    text: 'http://localhost:8090/api/v1',
   );
   bool _isLoading = false;
 

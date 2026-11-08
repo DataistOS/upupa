@@ -257,7 +257,6 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              // اصلاح شده با متد جدید withValues
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),

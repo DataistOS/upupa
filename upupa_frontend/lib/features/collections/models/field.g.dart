@@ -1,3 +1,4 @@
+// upupa_frontend/lib/features/collections/models/field.g.dart
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'field.dart';
@@ -12,6 +13,7 @@ Field _$FieldFromJson(Map<String, dynamic> json) => Field(
   required: json['required'] as bool? ?? false,
   defaultValue: json['defaultValue'],
   collectionId: json['collectionId'] as String?,
+  options: json['options'] as Map<String, dynamic>?,
 );
 
 Map<String, dynamic> _$FieldToJson(Field instance) => <String, dynamic>{
@@ -20,4 +22,5 @@ Map<String, dynamic> _$FieldToJson(Field instance) => <String, dynamic>{
   'required': instance.required,
   'defaultValue': instance.defaultValue,
   'collectionId': ?instance.collectionId,
+  'options': ?instance.options,
 };

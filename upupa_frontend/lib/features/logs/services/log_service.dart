@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/request_log.dart';
 
 class LogService {
-  static const String baseUrl = 'http://localhost:8888/api/v1';
+  static const String baseUrl = 'http://localhost:8090/api/v1';
 
   static Future<List<RequestLog>> getLogs() async {
     try {

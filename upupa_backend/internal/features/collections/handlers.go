@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"upupa_backend/internal/features/collections/fields"
 	"upupa_backend/internal/store"
 	"upupa_backend/pkg/models"
 
@@ -237,6 +238,34 @@ func (h *Handler) validateRelations(col models.Collection, data map[string]inter
 	return nil
 }
 
+func (h *Handler) validateRecordData(col models.Collection, data map[string]interface{}) error {
+	for _, field := range col.Schema {
+		f := fields.SchemaField{
+			ID:       "",
+			Name:     field.Name,
+			Type:     fields.FieldType(field.Type),
+			Required: field.Required,
+			Options:  nil,
+		}
+
+		validator, err := fields.NewValidator(f)
+		if err != nil {
+			return fmt.Errorf("invalid field type for '%s': %v", field.Name, err)
+		}
+
+		val := data[field.Name]
+		if err := validator.Validate(val); err != nil {
+			return err
+		}
+	}
+
+	if err := h.validateRelations(col, data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (h *Handler) expandRecord(record *models.Record, expandParam string) error {
 	if expandParam == "" {
 		return nil
@@ -329,7 +358,7 @@ func (h *Handler) CreateRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.validateRelations(*col, data); err != nil {
+	if err := h.validateRecordData(*col, data); err != nil {
 		h.respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -505,7 +534,7 @@ func (h *Handler) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 		mergedData[k] = v
 	}
 
-	if err := h.validateRelations(*col, mergedData); err != nil {
+	if err := h.validateRecordData(*col, mergedData); err != nil {
 		h.respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}

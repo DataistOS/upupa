@@ -72,7 +72,7 @@ func (h *PasswordResetHandler) RequestPasswordResetHandler(w http.ResponseWriter
 		return
 	}
 
-	resetLink := "http://127.0.0.1:8888/api/v1/auth/password-reset-confirm?token=" + token
+	resetLink := "http://127.0.0.1:8090/api/v1/auth/password-reset-confirm?token=" + token
 	log.Println("==================================================")
 	log.Printf("[LOCAL EMAIL SIMULATION] Password Reset Link for %s:", req.Email)
 	log.Println(resetLink)

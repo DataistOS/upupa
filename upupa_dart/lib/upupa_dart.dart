@@ -6,6 +6,8 @@ export 'src/auth_store.dart';
 
 export 'src/models/record.dart';
 export 'src/models/collection.dart';
+export 'src/models/field.dart';
+export 'src/models/rule.dart';
 
 export 'src/services/base_service.dart';
 export 'src/services/auth_service.dart';

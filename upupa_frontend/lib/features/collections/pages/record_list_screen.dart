@@ -153,7 +153,6 @@ class _RecordListScreenState extends State<RecordListScreen> {
               },
             ),
           ),
-          // لیست رکوردها
           Expanded(
             child: FutureBuilder<List<Record>>(
               future: _recordsFuture,

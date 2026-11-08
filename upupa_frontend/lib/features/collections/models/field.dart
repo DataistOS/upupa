@@ -16,12 +16,16 @@ class Field {
   @JsonKey(name: 'collectionId', includeIfNull: false)
   final String? collectionId;
 
+  @JsonKey(name: 'options', includeIfNull: false)
+  final Map<String, dynamic>? options;
+
   Field({
     required this.name,
     required this.type,
     this.required = false,
     this.defaultValue,
     this.collectionId,
+    this.options,
   });
 
   factory Field.fromJson(Map<String, dynamic> json) => _$FieldFromJson(json);
