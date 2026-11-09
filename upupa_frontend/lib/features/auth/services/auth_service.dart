@@ -137,4 +137,110 @@ class AuthService extends ChangeNotifier {
       );
     }
   }
+
+  Future<void> requestOtp(String email) async {
+    final uri = Uri.parse('$_baseUrl/auth/otp-request');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      final errorBody = json.decode(response.body);
+      throw Exception(
+        errorBody['error'] ??
+            'Failed to request OTP (status ${response.statusCode})',
+      );
+    }
+  }
+
+  Future<void> authWithOtp(String email, String code) async {
+    final uri = Uri.parse('$_baseUrl/auth/otp-login');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'code': code}),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      final token = jsonResponse['token'] as String;
+      if (jsonResponse['record'] != null) {
+        _currentUser = User.fromJson(jsonResponse['record']);
+      }
+      await _saveToken(token);
+    } else {
+      final errorBody = json.decode(response.body);
+      throw Exception(
+        errorBody['error'] ??
+            'OTP login failed with status ${response.statusCode}',
+      );
+    }
+  }
+
+  Future<dynamic> setupMfa() async {
+    final uri = Uri.parse('$_baseUrl/auth/mfa/setup');
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      final errorBody = json.decode(response.body);
+      throw Exception(
+        errorBody['error'] ??
+            'Failed to setup MFA (status ${response.statusCode})',
+      );
+    }
+  }
+
+  Future<void> verifyMfa(String email, String code) async {
+    final uri = Uri.parse('$_baseUrl/auth/mfa/verify');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'code': code}),
+    );
+
+    if (response.statusCode != 200) {
+      final errorBody = json.decode(response.body);
+      throw Exception(
+        errorBody['error'] ??
+            'Failed to verify MFA (status ${response.statusCode})',
+      );
+    }
+  }
+
+  Future<void> impersonate(String userId) async {
+    final uri = Uri.parse('$_baseUrl/admins/impersonate');
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      },
+      body: json.encode({'user_id': userId}),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      final token = jsonResponse['token'] as String;
+      if (jsonResponse['record'] != null) {
+        _currentUser = User.fromJson(jsonResponse['record']);
+      }
+      await _saveToken(token);
+    } else {
+      final errorBody = json.decode(response.body);
+      throw Exception(
+        errorBody['error'] ??
+            'Impersonation failed with status ${response.statusCode}',
+      );
+    }
+  }
 }

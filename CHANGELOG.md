@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.1] - 2026-11-09
+
+### Added
+- **Backend (`upupa_backend`)**:
+  - Implemented OTP request and login handlers (`otp.go`).
+  - Added MFA setup and verification endpoints (`mfa.go`).
+  - Integrated admin user impersonation handler (`impersonate.go`).
+  - Added OAuth authentication routing and provider configuration (`oauth.go`).
+  - Updated JSON encoder patterns across all auth handlers.
+
+- **Dart SDK (`upupa_dart`)**:
+  - Enhanced `AuthService` and `AuthStore` to support advanced authentication flows.
+  - Added comprehensive unit tests for authentication services (`auth_service_test.dart`).
+  - Updated collection service error handling and type-safety definitions.
+
+- **Flutter Frontend (`upupa_frontend`)**:
+  - Created OTP login form widget (`otp_login_form.dart`).
+  - Added MFA setup and QR code configuration screen (`mfa_setup_screen.dart`).
+  - Developed admin users management and impersonation screen (`admin_users_screen.dart`).
+  - Updated navigation routes in `main.dart` for seamless access to security features.
+
 ## [v0.5.0] - 2026-11-08
 
 ### Added

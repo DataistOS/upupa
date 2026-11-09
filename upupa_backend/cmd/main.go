@@ -106,6 +106,12 @@ func main() {
 		r.Post("/auth/password-reset", passwordResetHandler.RequestPasswordResetHandler)
 		r.Post("/auth/password-reset-confirm", passwordResetHandler.ConfirmPasswordResetHandler)
 
+		r.Post("/auth/otp-request", auth.RequestOTPHandler)
+		r.Post("/auth/otp-login", auth.LoginOTPHandler)
+
+		r.Post("/auth/mfa/setup", auth.SetupMFAHandler)
+		r.Post("/auth/mfa/verify", auth.VerifyMFAHandler)
+
 		r.Get("/profile", profileHandler.GetProfileHandler)
 		r.Put("/profile", profileHandler.UpdateProfileHandler)
 

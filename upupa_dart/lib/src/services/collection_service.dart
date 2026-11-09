@@ -8,7 +8,7 @@ class CollectionService extends BaseService {
   CollectionService(UpupaClient client) : super(client);
 
   Future<List<Collection>> getCollections() async {
-    final response = await client.sendGet('/api/v1/collections');
+    final response = await client.sendGet('/api/collections');
     final data = handleResponse(response);
 
     if (data is List) {
@@ -19,7 +19,7 @@ class CollectionService extends BaseService {
 
   Future<Collection> createCollection(String name) async {
     final response = await client.sendPost(
-      '/api/v1/collections',
+      '/api/collections',
       body: {'name': name},
     );
     final data = handleResponse(response);
@@ -31,7 +31,7 @@ class CollectionService extends BaseService {
     List<Field> schema,
   ) async {
     final response = await client.sendPost(
-      '/api/v1/collections/$collectionName',
+      '/api/collections/$collectionName',
       body: {'schema': schema.map((f) => f.toJson()).toList()},
     );
     final data = handleResponse(response);
@@ -40,7 +40,7 @@ class CollectionService extends BaseService {
 
   Future<void> deleteCollection(String collectionName) async {
     final response = await client.sendDelete(
-      '/api/v1/collections/$collectionName',
+      '/api/collections/$collectionName',
     );
     handleResponse(response);
   }

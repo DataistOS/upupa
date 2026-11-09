@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_store.dart';
+import 'services/auth_service.dart';
 import 'services/collection_service.dart';
 import 'services/record_service.dart';
 
@@ -10,12 +11,14 @@ class UpupaClient {
   final AuthStore authStore;
   final http.Client _httpClient;
 
+  late final AuthService auth;
   late final CollectionService collections;
   late final RecordService records;
 
   UpupaClient(this.baseUrl, {AuthStore? authStore, http.Client? httpClient})
     : authStore = authStore ?? AuthStore(),
       _httpClient = httpClient ?? http.Client() {
+    auth = AuthService(this);
     collections = CollectionService(this);
     records = RecordService(this);
   }

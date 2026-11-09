@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 
 import 'features/auth/pages/login_screen.dart';
 import 'features/auth/pages/register_screen.dart';
+import 'features/auth/pages/mfa_setup_screen.dart';
+import 'features/auth/pages/admin_users_screen.dart';
+import 'features/auth/widgets/otp_login_form.dart';
 import 'features/auth/services/auth_service.dart';
 import 'features/collections/pages/collection_list_screen.dart';
 
@@ -43,6 +46,28 @@ class UpupaApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/collections': (context) => const CollectionListScreen(),
+
+        '/otp-login': (context) => Scaffold(
+          appBar: AppBar(title: const Text('ورود با کد یک‌بار مصرف')),
+          body: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: OtpLoginForm(
+                  onLoginSuccess: () {
+                    Navigator.pushReplacementNamed(context, '/collections');
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+        '/mfa-setup': (context) => const MfaSetupScreen(),
+        '/admin/users': (context) => AdminUsersScreen(
+          onImpersonateSuccess: () {
+            Navigator.pushReplacementNamed(context, '/collections');
+          },
+        ),
       },
     );
   }
