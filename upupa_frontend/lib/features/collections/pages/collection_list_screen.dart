@@ -37,6 +37,14 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
       _collectionsFuture = CollectionService.getCollections().then((
         collections,
       ) {
+        if (_selectedCollection != null) {
+          final exists = collections.any(
+            (c) => c.id == _selectedCollection!.id,
+          );
+          if (!exists) {
+            _selectedCollection = null;
+          }
+        }
         return collections;
       });
     });
@@ -134,12 +142,13 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                         ),
                       ),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(
                               Icons.person_outline,
                               color: Colors.white70,
-                              size: 20,
+                              size: 18,
                             ),
                             tooltip: 'Profile & Overview',
                             onPressed: () {
@@ -153,7 +162,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                             icon: const Icon(
                               Icons.show_chart,
                               color: Colors.white70,
-                              size: 20,
+                              size: 18,
                             ),
                             tooltip: 'Request Logs',
                             onPressed: () {
@@ -167,7 +176,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                             icon: const Icon(
                               Icons.settings_outlined,
                               color: Colors.white70,
-                              size: 20,
+                              size: 18,
                             ),
                             tooltip: 'Settings',
                             onPressed: () {
@@ -183,7 +192,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                             icon: const Icon(
                               Icons.logout,
                               color: Colors.white70,
-                              size: 20,
+                              size: 18,
                             ),
                             tooltip: 'Logout',
                             onPressed: () {
@@ -199,6 +208,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                   ),
                 ),
                 const Divider(color: Colors.white24, height: 1),
+
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Row(
@@ -218,11 +228,13 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                           color: Colors.white54,
                           size: 16,
                         ),
+                        tooltip: 'Refresh Collections',
                         onPressed: _refreshCollections,
                       ),
                     ],
                   ),
                 ),
+
                 Expanded(
                   child: FutureBuilder<List<Collection>>(
                     future: _collectionsFuture,
@@ -289,6 +301,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                     },
                   ),
                 ),
+
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton.icon(
@@ -344,6 +357,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                         ),
                       ),
                       const Divider(height: 1, thickness: 1),
+
                       Expanded(
                         child: RecordListScreen(
                           key: ValueKey(_selectedCollection!.id),

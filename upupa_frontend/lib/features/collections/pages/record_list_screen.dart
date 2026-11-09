@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/collection.dart';
 import '../models/record.dart';
 import '../services/collection_service.dart';
+import '../widgets/record_list_item.dart';
 import 'record_detail_screen.dart';
 
 class RecordListScreen extends StatefulWidget {
@@ -22,8 +23,10 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   String _currentFilter = '';
+
   int _currentPage = 1;
-  final int _perPage = 30;
+  final int _perPage = 15;
+  bool _isTableView = false;
 
   @override
   void initState() {
@@ -52,6 +55,14 @@ class _RecordListScreenState extends State<RecordListScreen> {
         filter: filterParam,
       );
     });
+  }
+
+  void _changePage(int newPage) {
+    if (newPage < 1) return;
+    setState(() {
+      _currentPage = newPage;
+    });
+    _fetchRecords();
   }
 
   void _navigateToRecordDetail({Record? record}) async {
@@ -118,13 +129,28 @@ class _RecordListScreenState extends State<RecordListScreen> {
       appBar: AppBar(
         title: Text('${widget.collection.name} Records'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchRecords),
+          IconButton(
+            icon: Icon(_isTableView ? Icons.view_list : Icons.table_chart),
+            tooltip: _isTableView
+                ? 'Switch to List View'
+                : 'Switch to Table View',
+            onPressed: () {
+              setState(() {
+                _isTableView = !_isTableView;
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: _fetchRecords,
+          ),
         ],
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(12.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -136,6 +162,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
                     _searchController.clear();
                     setState(() {
                       _currentFilter = '';
+                      _currentPage = 1;
                     });
                     _fetchRecords();
                   },
@@ -153,6 +180,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
               },
             ),
           ),
+
           Expanded(
             child: FutureBuilder<List<Record>>(
               future: _recordsFuture,
@@ -164,48 +192,60 @@ class _RecordListScreenState extends State<RecordListScreen> {
                   return Center(
                     child: Text(
                       'Error loading records: ${snapshot.error.toString()}',
+                      style: const TextStyle(color: Colors.red),
                     ),
                   );
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No records found.'));
+                  return const Center(
+                    child: Text(
+                      'No records found.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  );
                 } else {
                   final records = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: records.length,
-                    itemBuilder: (context, index) {
-                      final record = records[index];
-                      final displayValue = widget.collection.schema.isNotEmpty
-                          ? (record.data[widget.collection.schema.first.name] ??
-                                record.id)
-                          : record.id;
-
-                      return ListTile(
-                        title: Text(displayValue.toString()),
-                        subtitle: Text('ID: ${record.id}'),
-                        onTap: () => _navigateToRecordDetail(record: record),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () =>
-                                  _navigateToRecordDetail(record: record),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.red,
-                                size: 20,
-                              ),
-                              onPressed: () => _deleteRecord(record.id),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
+                  return _isTableView
+                      ? _buildDataTable(records)
+                      : _buildListView(records);
                 }
               },
+            ),
+          ),
+
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Page $_currentPage',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _currentPage > 1
+                          ? () => _changePage(_currentPage - 1)
+                          : null,
+                      icon: const Icon(Icons.arrow_back, size: 16),
+                      label: const Text('Previous'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () => _changePage(_currentPage + 1),
+                      icon: const Icon(Icons.arrow_forward, size: 16),
+                      label: const Text('Next'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -214,6 +254,92 @@ class _RecordListScreenState extends State<RecordListScreen> {
         onPressed: () => _navigateToRecordDetail(),
         tooltip: 'Create New Record',
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildListView(List<Record> records) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(8.0),
+      itemCount: records.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final record = records[index];
+        return RecordListItem(
+          collection: widget.collection,
+          record: record,
+          onEditTap: (rec) => _navigateToRecordDetail(record: rec),
+          onDeleteTap: (rec) => _deleteRecord(rec.id),
+        );
+      },
+    );
+  }
+
+  Widget _buildDataTable(List<Record> records) {
+    final fields = widget.collection.schema;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columns: [
+            const DataColumn(
+              label: Text('ID', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            ...fields.map(
+              (f) => DataColumn(
+                label: Text(
+                  f.name.toUpperCase(),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const DataColumn(
+              label: Text(
+                'Actions',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+          rows: records.map((record) {
+            return DataRow(
+              cells: [
+                DataCell(
+                  Text(
+                    record.id.length > 8
+                        ? '${record.id.substring(0, 8)}...'
+                        : record.id,
+                  ),
+                ),
+                ...fields.map((f) {
+                  final val = record.data[f.name];
+                  return DataCell(Text(val?.toString() ?? '-'));
+                }),
+                DataCell(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 18),
+                        onPressed: () =>
+                            _navigateToRecordDetail(record: record),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                          size: 18,
+                        ),
+                        onPressed: () => _deleteRecord(record.id),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
       ),
     );
   }
