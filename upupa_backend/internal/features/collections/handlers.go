@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"upupa_backend/internal/features/collections/fields"
+	"upupa_backend/internal/features/realtime"
 	"upupa_backend/internal/store"
 	"upupa_backend/pkg/models"
 
@@ -378,6 +379,8 @@ func (h *Handler) CreateRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	realtime.GlobalHub.Broadcast("create", col.Name, createdRecord)
+
 	h.respondWithJSON(w, http.StatusCreated, createdRecord)
 }
 
@@ -556,6 +559,9 @@ func (h *Handler) UpdateRecordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updatedRecord, _ := h.Records.GetByID(col.ID, recordID)
+
+	realtime.GlobalHub.Broadcast("update", col.Name, updatedRecord)
+
 	h.respondWithJSON(w, http.StatusOK, updatedRecord)
 }
 
@@ -590,6 +596,8 @@ func (h *Handler) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 		h.respondWithError(w, http.StatusInternalServerError, "Failed to delete record")
 		return
 	}
+
+	realtime.GlobalHub.Broadcast("delete", col.Name, map[string]string{"id": recordID})
 
 	h.respondWithJSON(w, http.StatusNoContent, nil)
 }

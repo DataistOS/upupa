@@ -5,8 +5,7 @@ import '../services/auth_service.dart';
 class OtpLoginForm extends StatefulWidget {
   final VoidCallback onLoginSuccess;
 
-  const OtpLoginForm({Key? key, required this.onLoginSuccess})
-    : super(key: key);
+  const OtpLoginForm({super.key, required this.onLoginSuccess});
 
   @override
   State<OtpLoginForm> createState() => _OtpLoginFormState();

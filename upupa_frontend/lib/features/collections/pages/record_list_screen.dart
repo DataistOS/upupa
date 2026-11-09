@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/collection.dart';
 import '../models/record.dart';
 import '../services/collection_service.dart';
+import '../services/realtime_service.dart';
 import '../widgets/record_list_item.dart';
 import 'record_detail_screen.dart';
 
@@ -20,6 +21,7 @@ class RecordListScreen extends StatefulWidget {
 class _RecordListScreenState extends State<RecordListScreen> {
   late Future<List<Record>> _recordsFuture;
   late CollectionService _service;
+  final RealtimeService _realtimeService = RealtimeService();
 
   final TextEditingController _searchController = TextEditingController();
   String _currentFilter = '';
@@ -33,12 +35,28 @@ class _RecordListScreenState extends State<RecordListScreen> {
     super.initState();
     _service = CollectionService(widget.collection.name);
     _fetchRecords();
+    _initRealtime();
   }
 
   @override
   void dispose() {
+    _realtimeService.disconnect();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _initRealtime() {
+    _realtimeService.connect(
+      onEvent: (event, collectionName, data) {
+        if (collectionName == widget.collection.name) {
+          log('Realtime event received: $event on collection $collectionName');
+          _fetchRecords();
+        }
+      },
+      onError: (error) {
+        log('Realtime error: $error');
+      },
+    );
   }
 
   void _fetchRecords() {

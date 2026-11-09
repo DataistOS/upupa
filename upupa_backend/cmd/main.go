@@ -17,6 +17,7 @@ import (
 	"upupa_backend/internal/features/collections"
 	"upupa_backend/internal/features/logs"
 	"upupa_backend/internal/features/profile"
+	"upupa_backend/internal/features/realtime"
 	"upupa_backend/internal/features/storage"
 	"upupa_backend/internal/store"
 	"upupa_backend/pkg/models"
@@ -124,6 +125,8 @@ func main() {
 
 		r.Post("/collections", collectionHandler.CreateCollectionHandler)
 		r.Get("/collections", collectionHandler.ListCollectionsHandler)
+
+		realtime.RegisterRoutes(r)
 
 		r.Route("/collections/{name}", func(subRouter chi.Router) {
 			subRouter.Get("/", collectionHandler.GetCollectionHandler)

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
 class MfaSetupScreen extends StatefulWidget {
-  const MfaSetupScreen({Key? key}) : super(key: key);
+  const MfaSetupScreen({super.key});
 
   @override
   State<MfaSetupScreen> createState() => _MfaSetupScreenState();
