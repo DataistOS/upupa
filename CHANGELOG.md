@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.6.0] - 2026-04-05
+
+### Added
+- **Sphinx Documentation Setup**: Initialized professional documentation structure inside `upupa_docs/` with support for Markdown (`myst_parser`) and reStructuredText.
+- **RTL & Persian Typography**: Implemented custom CSS overrides (`custom.css`) to support complete Right-to-Left (RTL) layout, Vazirmatn typography, and proper alignment for menus and contents.
+- **Dark Theme Integration**: Styled the documentation theme to seamlessly match the project's signature dark color palette (`#1a1b26`).
+- **Dynamic Versioning**: Configured Sphinx to automatically read the release version directly from the project's version tracker.
+- **Interactive Version Flyout**: Positioned and styled the version and branch selection menu at the bottom-left corner with full RTL compatibility.
+
+### Maintenance
+- Updated `.gitignore` to exclude Sphinx build artifacts (`upupa_docs/build/`) and temporary files.
+- Added initial user guides including the `dart-sdk.rst` documentation for `upupa_dart`.
+
 ## [0.5.1] - 2026-11-09
 
 ### Added

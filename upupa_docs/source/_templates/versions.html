@@ -1,0 +1,44 @@
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> </span>
+    {% if current_version is string %}
+      {{ current_version }}
+    {% else %}
+      {{ current_version.name }}
+    {% endif %}
+    {% if current_release %}
+      <span style="font-size: 0.8em; opacity: 0.8;">(v{{ current_release }})</span>
+    {% endif %}
+    <span class="fa fa-caret-down"></span>
+  </span>
+
+    <div class="rst-other-versions">
+        <div class="injected">
+            <dl>
+                <dt>برنچ‌ها</dt>
+                {% for version in versions %}
+                <dd><a href="{{ version.url }}">{{ version.name }}</a></dd>
+                {% endfor %}
+            </dl>
+
+            <dl>
+                <dt>دانلودها</dt>
+                {% if downloads %}
+                {% for dl in downloads %}
+                <dd><a href="{{ dl.url }}">{{ dl.name }}</a></dd>
+                {% endfor %}
+                {% endif %}
+                <dd><a href="download.html">صفحه دانلود</a></dd>
+            </dl>
+
+            <dl>
+                <dt>وضعیت</dt>
+                <dd>
+                    <a href="https://status.dataist.ir/status/heuristic" target="_blank">
+                        <span class="fa fa-line-chart"></span> مانیتورینگ سرویس‌ها
+                    </a>
+                </dd>
+            </dl>
+        </div>
+    </div>
+</div>

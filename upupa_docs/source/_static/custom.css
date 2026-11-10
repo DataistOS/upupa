@@ -1,0 +1,275 @@
+/* ==========================================================================
+   Design Tokens Integration (Source of Truth)
+   ========================================================================== */
+@import url('../../../build/css/tokens.css');
+
+/* ==========================================================================
+   Typography & Base Layout
+   ========================================================================== */
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/vazirmatn/33.0.3/vazirmatn.css');
+
+body, h1, h2, h3, h4, h5, h6, .wy-nav-side, .wy-menu-vertical a, .wy-nav-top, .rst-versions {
+  font-family: 'Vazirmatn', sans-serif !important;
+}
+
+body {
+  direction: rtl !important;
+  text-align: right !important;
+  background: #1a1b26 !important;
+  color: #a9b1d6 !important;
+}
+
+p, li {
+  text-align: justify;
+  text-justify: inter-word;
+  direction: rtl !important;
+}
+
+.wy-nav-content-wrap {
+  margin-right: 300px !important;
+  margin-left: 0 !important;
+  background: #1a1b26 !important;
+  left: auto !important;
+  right: 0 !important;
+}
+
+.wy-uid-page, .wy-nav-content {
+  background: #1a1b26 !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #7aa2f7 !important;
+}
+
+hr {
+  border-top: 1px solid #24283b !important;
+}
+
+.rst-content img, .rst-content .figure {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* RTL Sidebar & Navigation */
+.wy-nav-side {
+  right: 0 !important;
+  left: auto !important;
+  background: #16161e !important;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.wy-side-nav-search {
+  background: #1f2335 !important;
+  padding: 20px 15px !important;
+}
+
+.wy-side-nav-search input[type=text] {
+  background: #16161e !important;
+  color: #cfc9c2 !important;
+  border: 1px solid #3b4261 !important;
+  border-radius: 20px !important;
+  padding: 6px 12px !important;
+  text-align: right !important;
+}
+
+.wy-menu-vertical {
+  padding: 10px 15px !important;
+}
+
+.wy-menu-vertical a {
+  color: #9ab3de !important;
+  text-align: right !important;
+}
+
+.wy-menu-vertical li.on a, .wy-menu-vertical li.current a, .wy-menu-vertical a:hover {
+  background: #24283b !important;
+  color: #ff9e64 !important;
+}
+
+.wy-menu-vertical li a {
+  white-space: normal !important;
+  line-height: 1.6 !important;
+}
+
+/* Mobile Header & Links */
+.wy-nav-top {
+  direction: rtl !important;
+  background: #16161e !important;
+}
+
+.wy-nav-top a {
+  float: right !important;
+  color: #ff9e64 !important;
+}
+
+.wy-nav-top i {
+  float: left !important;
+}
+
+a {
+  color: #41a6b5 !important;
+}
+
+a:hover {
+  color: #73daca !important;
+}
+
+/* Buttons & Footer */
+.btn-neutral {
+  background-color: #24283b !important;
+  color: #a9b1d6 !important;
+  border: 1px solid #3b4261 !important;
+}
+
+.btn-neutral:hover {
+  background-color: #ff9e64 !important;
+  color: #16161e !important;
+  border-color: #ff9e64 !important;
+}
+
+.rst-footer-buttons {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+}
+
+/* Code Blocks */
+.rst-content div[class^='highlight'] pre, .rst-content pre.literal-block {
+  background: #101014 !important;
+  color: #9ece6a !important;
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid #24283b;
+  font-family: 'Courier New', Courier, monospace !important;
+  direction: ltr !important;
+  text-align: left !important;
+  overflow-x: auto;
+}
+
+.rst-content code.literal {
+  background: #24283b;
+  color: #f7768e !important;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace !important;
+  direction: ltr !important;
+  display: inline-block;
+  border: 1px solid #3b4261;
+}
+
+/* Data Tables */
+.rst-content table.docutils {
+  background-color: #1b1e26 !important;
+  border: 1px solid #24283b !important;
+}
+
+.rst-content table.docutils tr:nth-child(odd) { background-color: #1b1e26 !important; }
+.rst-content table.docutils tr:nth-child(even) { background-color: #232733 !important; }
+
+.rst-content table.docutils th {
+  background-color: #1f2335 !important;
+  color: #7aa2f7 !important;
+  border: 1px solid #24283b !important;
+  text-align: right !important;
+}
+
+.rst-content table.docutils td {
+  color: #a9b1d6 !important;
+  border: 1px solid #24283b !important;
+  text-align: right !important;
+}
+
+/* Admonitions */
+.rst-content .admonition {
+  background-color: #1f2335 !important;
+  border: 1px solid #3b4261 !important;
+  color: #a9b1d6 !important;
+  text-align: right !important;
+}
+
+.rst-content .admonition .admonition-title {
+  background-color: #24283b !important;
+  color: #7aa2f7 !important;
+  border-bottom: 1px solid #3b4261 !important;
+  text-align: right !important;
+}
+
+/* Version Flyout - Bottom-Left Position */
+.rst-versions {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  width: 200px !important;
+  background: #16161e !important;
+  border-top: 1px solid #3b4261 !important;
+  border-right: 1px solid #3b4261 !important;
+  border-left: none !important;
+  z-index: 400 !important;
+  direction: rtl !important;
+  font-family: 'Vazirmatn', sans-serif !important;
+}
+
+.rst-versions .rst-current-version {
+  text-align: right !important;
+  padding: 10px !important;
+  background: #1f2335 !important;
+  color: #7aa2f7 !important;
+}
+
+.rst-versions.shift-up .rst-other-versions,
+.rst-versions .rst-other-versions {
+  direction: rtl !important;
+  text-align: right !important;
+  background: #16161e !important;
+  border: 1px solid #3b4261 !important;
+}
+
+.rst-versions .rst-other-versions dl dt,
+.rst-versions .rst-other-versions dl dd {
+  text-align: right !important;
+  margin: 0 !important;
+  padding: 4px 12px !important;
+}
+
+.rst-versions .rst-other-versions dl dd a {
+  color: #9ab3de !important;
+}
+
+.rst-versions .rst-other-versions dl dd a:hover {
+  color: #ff9e64 !important;
+}
+
+/* Vazirmatn Force */
+.rst-versions, .rst-versions * {
+  font-family: 'Vazirmatn', sans-serif !important;
+}
+
+/* ==========================================================================
+   Token Swatches - Global Styles (Applied to all Sphinx tables)
+   ========================================================================== */
+
+.swatch-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 40px;
+    height: 100%;
+    background-color: #16161e !important;
+    border-radius: 4px;
+}
+
+.token-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid #3b4261;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+.rst-content table.docutils td:has(.swatch-container) {
+    background-color: #16161e !important;
+    text-align: center;
+    padding: 4px !important;
+}

@@ -86,3 +86,8 @@ upupa_frontend/ios/Runner/Generated/
 
 # --- Exceptions ---
 !**/ios/**/default.mode1v3
+
+
+# --- Documentation (Sphinx) ---
+upupa_docs/build/
+upupa_docs/.DS_Store
