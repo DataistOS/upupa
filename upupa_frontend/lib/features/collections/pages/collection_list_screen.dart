@@ -10,6 +10,7 @@ import '../../logs/pages/logs_screen.dart';
 import '../models/collection.dart';
 import '../services/collection_service.dart';
 import '../widgets/create_collection_dialog.dart';
+import '../widgets/collection_list_item.dart';
 import 'collection_schema_screen.dart';
 import 'collection_rules_screen.dart';
 import 'record_list_screen.dart';
@@ -25,6 +26,9 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
   late Future<List<Collection>> _collectionsFuture;
   Collection? _selectedCollection;
   bool _showLogs = false;
+
+  // مجموعه‌ای از شناسه‌های کالکشن‌های پین‌شده
+  final Set<String> _pinnedCollectionIds = {};
 
   @override
   void initState() {
@@ -78,6 +82,120 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
       ),
     );
     _refreshCollections();
+  }
+
+  void _togglePin(Collection collection) {
+    setState(() {
+      if (_pinnedCollectionIds.contains(collection.id)) {
+        _pinnedCollectionIds.remove(collection.id);
+      } else {
+        _pinnedCollectionIds.add(collection.id);
+      }
+    });
+  }
+
+  void _showRenameDialog(Collection collection) {
+    final controller = TextEditingController(text: collection.name);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Rename Collection: ${collection.name}'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'New Name',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty && newName != collection.name) {
+                Navigator.pop(context);
+                try {
+                  await CollectionService(
+                    collection.name,
+                  ).renameCollection(newName);
+                  _refreshCollections();
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Collection renamed successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(Collection collection) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Collection'),
+        content: Text(
+          'Are you sure you want to delete "${collection.name}"? All related records will be permanently removed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await CollectionService(collection.name).deleteCollection();
+                if (_selectedCollection?.id == collection.id) {
+                  setState(() {
+                    _selectedCollection = null;
+                  });
+                }
+                _refreshCollections();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Collection deleted successfully!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(e.toString()),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showCreateDialog() {
@@ -256,45 +374,38 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                         );
                       }
 
-                      final collections = snapshot.data!;
+                      var collections = snapshot.data!;
+
+                      collections.sort((a, b) {
+                        final aPinned = _pinnedCollectionIds.contains(a.id);
+                        final bPinned = _pinnedCollectionIds.contains(b.id);
+                        if (aPinned && !bPinned) return -1;
+                        if (!aPinned && bPinned) return 1;
+                        return 0;
+                      });
+
                       return ListView.builder(
                         itemCount: collections.length,
                         itemBuilder: (context, index) {
                           final collection = collections[index];
-                          final isSelected =
-                              _selectedCollection?.id == collection.id;
+                          final isPinned = _pinnedCollectionIds.contains(
+                            collection.id,
+                          );
 
-                          return ListTile(
-                            selected: isSelected,
-                            selectedTileColor: Colors.blue.withValues(
-                              alpha: 0.2,
-                            ),
-                            leading: Icon(
-                              collection.system
-                                  ? Icons.lock
-                                  : Icons.folder_outlined,
-                              color: isSelected
-                                  ? Colors.blueAccent
-                                  : Colors.white70,
-                              size: 20,
-                            ),
-                            title: Text(
-                              collection.name,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.white70,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                            onTap: () {
+                          return CollectionListItem(
+                            collection: collection,
+                            isPinned: isPinned,
+                            onRecordsTap: () {
                               setState(() {
                                 _selectedCollection = collection;
                                 _showLogs = false;
                               });
                             },
+                            onSchemaEdit: () => _navigateToSchema(collection),
+                            onRulesEdit: () => _navigateToRules(collection),
+                            onRename: () => _showRenameDialog(collection),
+                            onPinToggle: () => _togglePin(collection),
+                            onDelete: () => _confirmDelete(collection),
                           );
                         },
                       );

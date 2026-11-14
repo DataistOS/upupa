@@ -170,6 +170,30 @@ class CollectionService {
     }
   }
 
+  Future<Collection> renameCollection(String newName) async {
+    final uri = Uri.parse('$_baseUrl/collections/$collectionName');
+
+    try {
+      final response = await http.patch(
+        uri,
+        headers: _getHeaders(),
+        body: json.encode({'name': newName}),
+      );
+
+      if (response.statusCode == 200) {
+        return Collection.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 404) {
+        throw Exception('Collection not found for renaming.');
+      } else {
+        throw Exception(
+          'Failed to rename collection. Status: ${response.statusCode}, Body: ${response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to connect to API: $e');
+    }
+  }
+
   static Future<String> uploadFile(dynamic fileBytes, String filename) async {
     final uri = Uri.parse('$_baseUrl/files');
 
@@ -304,7 +328,7 @@ class CollectionService {
         throw Exception('Record not found for update.');
       } else {
         throw Exception(
-          'Failed to update record. Status: ${response.statusCode}, Body: ${response.body}',
+          'Failed to update record.Status: ${response.statusCode}, Body: ${response.body}',
         );
       }
     } catch (e) {

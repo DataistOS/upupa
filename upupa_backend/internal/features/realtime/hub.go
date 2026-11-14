@@ -1,3 +1,4 @@
+// upupa_backend/internal/features/realtime/hub.go
 package realtime
 
 import (

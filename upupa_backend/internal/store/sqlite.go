@@ -1,4 +1,3 @@
-// upupa_backend/internal/store/sqlite.go
 package store
 
 import (
@@ -151,8 +150,8 @@ func (s *SQLiteStore) UpdateCollection(col models.Collection) (*models.Collectio
 	schemaJSON, _ := json.Marshal(col.Schema)
 	rulesJSON, _ := json.Marshal(col.Rules)
 
-	query := `UPDATE collections SET schema = ?, rules = ?, updated = ? WHERE name = ?`
-	res, err := s.db.Exec(query, schemaJSON, rulesJSON, col.Updated.Format(time.RFC3339), col.Name)
+	query := `UPDATE collections SET name = ?, schema = ?, rules = ?, updated = ? WHERE id = ?`
+	res, err := s.db.Exec(query, col.Name, schemaJSON, rulesJSON, col.Updated.Format(time.RFC3339), col.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -443,6 +442,10 @@ func (s *SQLiteStore) GetByEmail(email string) (*models.User, error) {
 	user.Updated, _ = time.Parse(time.RFC3339, updated)
 
 	return &user, nil
+}
+
+func (s *SQLiteStore) GetGetUserByID(userID string) (*models.User, error) {
+	return s.GetUserByID(userID)
 }
 
 func (s *SQLiteStore) GetUserByID(userID string) (*models.User, error) {

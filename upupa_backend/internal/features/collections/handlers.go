@@ -1,4 +1,3 @@
-// upupa_backend/internal/features/collections/handlers.go
 package collections
 
 import (
@@ -141,6 +140,10 @@ func (h *Handler) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	if req.Name != "" && req.Name != col.Name {
+		col.Name = models.Slugify(req.Name)
+	}
+
 	if req.Schema != nil {
 		col.Schema = req.Schema
 	}
@@ -148,9 +151,10 @@ func (h *Handler) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request
 		col.Rules = req.Rules
 	}
 
-	if _, err := h.Collections.UpdateCollection(*col); err != nil {
-		if err == sql.ErrNoRows {
-			h.respondWithError(w, http.StatusNotFound, "Collection not found during update")
+	updatedCol, err := h.Collections.UpdateCollection(*col)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			h.respondWithError(w, http.StatusConflict, "Collection name already exists")
 			return
 		}
 		log.Printf("Error updating collection: %v", err)
@@ -158,7 +162,6 @@ func (h *Handler) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	updatedCol, _ := h.Collections.GetByName(name)
 	h.respondWithJSON(w, http.StatusOK, updatedCol)
 }
 

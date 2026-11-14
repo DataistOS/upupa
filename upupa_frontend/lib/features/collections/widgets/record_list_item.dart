@@ -30,24 +30,28 @@ class RecordListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleField = collection.schema.firstWhere(
-      (f) => f.type == 'string',
-      orElse: () => collection.schema.first,
-    );
+    final titleField = collection.schema.isNotEmpty
+        ? collection.schema.firstWhere(
+            (f) => f.type == 'string',
+            orElse: () => collection.schema.first,
+          )
+        : null;
 
-    final subtitleWidgets = collection.schema
-        .where((f) => f.name != titleField.name && f.name != 'id')
-        .take(2)
-        .map((field) {
-          final value = record.data[field.name];
-          final displayValue = safeToString(value, 'N/A');
+    final List<Widget> subtitleWidgets = titleField != null
+        ? collection.schema
+              .where((f) => f.name != titleField.name && f.name != 'id')
+              .take(2)
+              .map<Widget>((field) {
+                final value = record.data[field.name];
+                final displayValue = safeToString(value, 'N/A');
 
-          return Text(
-            '${field.name[0].toUpperCase() + field.name.substring(1)}: $displayValue',
-            style: Theme.of(context).textTheme.bodySmall,
-          );
-        })
-        .toList();
+                return Text(
+                  '${field.name[0].toUpperCase() + field.name.substring(1)}: $displayValue',
+                  style: Theme.of(context).textTheme.bodySmall,
+                );
+              })
+              .toList()
+        : <Widget>[];
 
     subtitleWidgets.addAll([
       Text(
@@ -60,10 +64,12 @@ class RecordListItem extends StatelessWidget {
       ),
     ]);
 
-    final titleValue = safeToString(
-      record.data[titleField.name],
-      'Record ID: ${record.id.substring(0, 8)}...',
-    );
+    final titleValue = titleField != null
+        ? safeToString(
+            record.data[titleField.name],
+            'Record ID: ${record.id.substring(0, 8)}...',
+          )
+        : 'Record ID: ${record.id.substring(0, 8)}...';
 
     return ListTile(
       title: Text(
