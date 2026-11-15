@@ -27,16 +27,23 @@ class _OtpLoginFormState extends State<OtpLoginForm> {
       _errorMessage = null;
     });
 
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
       await _authService.requestOtp(_emailController.text.trim());
+
+      if (!mounted) return;
+
       setState(() {
         _codeSent = true;
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
+
+      messenger.showSnackBar(
         const SnackBar(content: Text('کد تایید به ایمیل شما ارسال شد.')),
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
@@ -55,11 +62,15 @@ class _OtpLoginFormState extends State<OtpLoginForm> {
         _emailController.text.trim(),
         _codeController.text.trim(),
       );
+
+      if (!mounted) return;
+
       setState(() {
         _isLoading = false;
       });
       widget.onLoginSuccess();
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;

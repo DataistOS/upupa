@@ -19,7 +19,10 @@ class RecordListScreen extends StatefulWidget {
 }
 
 class _RecordListScreenState extends State<RecordListScreen> {
-  late Future<List<Record>> _recordsFuture;
+  List<Record> _records = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
   late CollectionService _service;
   final RealtimeService _realtimeService = RealtimeService();
 
@@ -28,7 +31,7 @@ class _RecordListScreenState extends State<RecordListScreen> {
 
   int _currentPage = 1;
   final int _perPage = 15;
-  bool _isTableView = false;
+  bool _isTableView = true;
 
   @override
   void initState() {
@@ -59,20 +62,36 @@ class _RecordListScreenState extends State<RecordListScreen> {
     );
   }
 
-  void _fetchRecords() {
+  void _fetchRecords() async {
     setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
       String? filterParam;
       if (_currentFilter.isNotEmpty && widget.collection.schema.isNotEmpty) {
         final firstField = widget.collection.schema.first.name;
         filterParam = "$firstField ~ '$_currentFilter'";
       }
 
-      _recordsFuture = _service.getRecords(
+      final records = await _service.getRecords(
         page: _currentPage,
         perPage: _perPage,
         filter: filterParam,
       );
-    });
+
+      setState(() {
+        _records = records;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+      log('Error loading records: $e');
+    }
   }
 
   void _changePage(int newPage) {
@@ -200,40 +219,33 @@ class _RecordListScreenState extends State<RecordListScreen> {
           ),
 
           Expanded(
-            child: FutureBuilder<List<Record>>(
-              future: _recordsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  log('Error loading records: ${snapshot.error}');
-                  return Center(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                ? Center(
                     child: Text(
-                      'Error loading records: ${snapshot.error.toString()}',
+                      'Error loading records: $_errorMessage',
                       style: const TextStyle(color: Colors.red),
                     ),
-                  );
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(
+                  )
+                : _records.isEmpty
+                ? const Center(
                     child: Text(
                       'No records found.',
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
-                  );
-                } else {
-                  final records = snapshot.data!;
-                  return _isTableView
-                      ? _buildDataTable(records)
-                      : _buildListView(records);
-                }
-              },
-            ),
+                  )
+                : (_isTableView
+                      ? _buildDataTable(_records)
+                      : _buildListView(_records)),
           ),
 
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              right: 80.0,
+              top: 8.0,
+              bottom: 8.0,
             ),
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
@@ -257,7 +269,9 @@ class _RecordListScreenState extends State<RecordListScreen> {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
-                      onPressed: () => _changePage(_currentPage + 1),
+                      onPressed: (_records.length < _perPage)
+                          ? null
+                          : () => _changePage(_currentPage + 1),
                       icon: const Icon(Icons.arrow_forward, size: 16),
                       label: const Text('Next'),
                     ),

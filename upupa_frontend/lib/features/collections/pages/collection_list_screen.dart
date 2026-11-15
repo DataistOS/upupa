@@ -27,7 +27,6 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
   Collection? _selectedCollection;
   bool _showLogs = false;
 
-  // مجموعه‌ای از شناسه‌های کالکشن‌های پین‌شده
   final Set<String> _pinnedCollectionIds = {};
 
   @override
@@ -68,6 +67,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
         ),
       ),
     );
+    if (!mounted) return;
     _refreshCollections();
   }
 
@@ -81,6 +81,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
         ),
       ),
     );
+    if (!mounted) return;
     _refreshCollections();
   }
 
@@ -99,7 +100,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text('Rename Collection: ${collection.name}'),
         content: TextField(
           controller: controller,
@@ -111,21 +112,24 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
               final newName = controller.text.trim();
               if (newName.isNotEmpty && newName != collection.name) {
-                Navigator.pop(context);
+                final messenger = ScaffoldMessenger.of(dialogContext);
+                Navigator.pop(dialogContext);
+
                 try {
                   await CollectionService(
                     collection.name,
                   ).renameCollection(newName);
-                  _refreshCollections();
+
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  _refreshCollections();
+                  messenger.showSnackBar(
                     const SnackBar(
                       content: Text('Collection renamed successfully!'),
                       backgroundColor: Colors.green,
@@ -133,7 +137,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                   );
                 } catch (e) {
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text(e.toString()),
                       backgroundColor: Colors.red,
@@ -152,30 +156,33 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
   void _confirmDelete(Collection collection) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Collection'),
         content: Text(
           'Are you sure you want to delete "${collection.name}"? All related records will be permanently removed.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              Navigator.pop(context);
+              final messenger = ScaffoldMessenger.of(dialogContext);
+              Navigator.pop(dialogContext);
+
               try {
                 await CollectionService(collection.name).deleteCollection();
+
+                if (!mounted) return;
                 if (_selectedCollection?.id == collection.id) {
                   setState(() {
                     _selectedCollection = null;
                   });
                 }
                 _refreshCollections();
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(
                     content: Text('Collection deleted successfully!'),
                     backgroundColor: Colors.green,
@@ -183,7 +190,7 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
                 );
               } catch (e) {
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   SnackBar(
                     content: Text(e.toString()),
                     backgroundColor: Colors.red,
@@ -198,33 +205,36 @@ class _CollectionListScreenState extends State<CollectionListScreen> {
     );
   }
 
-  void _showCreateDialog() {
-    showDialog<String>(
+  void _showCreateDialog() async {
+    final collectionName = await showDialog<String>(
       context: context,
-      builder: (context) => const CreateCollectionDialog(),
-    ).then((collectionName) async {
-      if (collectionName != null && collectionName.isNotEmpty) {
-        try {
-          await CollectionService.createCollection(collectionName);
-          _refreshCollections();
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Collection "$collectionName" created successfully!',
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } catch (e) {
-          log('Collection creation error: $e');
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-          );
-        }
+      builder: (dialogContext) => const CreateCollectionDialog(),
+    );
+
+    if (!mounted) return;
+
+    if (collectionName != null && collectionName.isNotEmpty) {
+      final messenger = ScaffoldMessenger.of(context);
+
+      try {
+        await CollectionService.createCollection(collectionName);
+
+        if (!mounted) return;
+        _refreshCollections();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Collection "$collectionName" created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        log('Collection creation error: $e');
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
       }
-    });
+    }
   }
 
   @override

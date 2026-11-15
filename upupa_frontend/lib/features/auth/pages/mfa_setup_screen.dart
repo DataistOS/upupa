@@ -26,11 +26,13 @@ class _MfaSetupScreenState extends State<MfaSetupScreen> {
 
     try {
       final data = await _authService.setupMfa();
+      if (!mounted) return;
       setState(() {
         _mfaData = data;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
@@ -44,21 +46,26 @@ class _MfaSetupScreenState extends State<MfaSetupScreen> {
       _errorMessage = null;
     });
 
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
       final email = _authService.currentUser?.email ?? 'user@example.com';
       await _authService.verifyMfa(email, _codeController.text.trim());
+
+      if (!mounted) return;
 
       setState(() {
         _isVerified = true;
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('احراز هویت دو مرحله‌ای با موفقیت فعال شد.'),
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
