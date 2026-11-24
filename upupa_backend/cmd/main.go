@@ -72,6 +72,7 @@ func main() {
 
 	profileHandler := profile.NewHandler(dbStore, dbStore)
 	storageHandler := storage.NewHandler(dbStore)
+	mediaSyncHandler := storage.NewMediaSyncHandler(dbStore)
 	collectionHandler := collections.NewHandler(dbStore, dbStore, dbStore)
 
 	backupHandler := backup.NewHandler(DB_FILE)
@@ -121,6 +122,7 @@ func main() {
 		r.Get("/backup", backupHandler.DownloadBackup)
 
 		r.Post("/files", storageHandler.UploadFileHandler)
+		r.Post("/files/sync", mediaSyncHandler.SyncFileHandler)
 		r.Get("/files/{filename}", storageHandler.ServeFileHandler)
 
 		r.Post("/collections", collectionHandler.CreateCollectionHandler)
